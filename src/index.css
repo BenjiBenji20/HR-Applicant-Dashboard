@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer utilities {
+  /* Print utilities */
+  @media print {
+    body {
+      background-color: white !important;
+      color: black !important;
+    }
+    
+    /* Hide all web components when printing */
+    header, aside, main, #sidebar-overlay, [id*="overlay"], [id*="modal"] {
+      display: none !important;
+      visibility: hidden !important;
+    }
+    
+    /* Expose the official assessment print area */
+    #print-area {
+      display: block !important;
+      visibility: visible !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+    }
+  }
+  
+  /* Modern clean scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 9999px;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: #1f2937;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+  }
+}
+

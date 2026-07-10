@@ -1,0 +1,6 @@
+{
+  "name": "HR Applicant Response Portal",
+  "description": "A minimalist, responsive HR Dashboard to inspect applicant form responses, visualize quantitative metrics, prompt Gemini-powered psychometric reports, and download or print assessment forms.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
