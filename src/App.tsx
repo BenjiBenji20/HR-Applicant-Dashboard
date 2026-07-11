@@ -209,6 +209,8 @@ export default function App() {
             setIsOpen={setSidebarOpen}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
           />
 
           {/* Main Workspace Frame */}

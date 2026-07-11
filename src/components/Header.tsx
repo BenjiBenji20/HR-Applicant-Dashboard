@@ -26,11 +26,12 @@ export default function Header({
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center bg-slate-100 dark:bg-slate-900 rounded-full p-1 border border-slate-200/50 dark:border-slate-850">
+        {/* Theme mode toggle - Hidden on Mobile */}
+        <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-900 rounded-full p-1 border border-slate-200/50 dark:border-slate-850">
           <button
             id="theme-light-btn"
             onClick={() => setDarkMode(false)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
               !darkMode
                 ? "bg-white text-slate-800 shadow-xs"
                 : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
@@ -41,7 +42,7 @@ export default function Header({
           <button
             id="theme-dark-btn"
             onClick={() => setDarkMode(true)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
               darkMode
                 ? "bg-slate-800 text-white shadow-xs"
                 : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
@@ -50,10 +51,10 @@ export default function Header({
             Dark
           </button>
         </div>
-        <div className="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
-        <div className="flex flex-col items-end text-xs">
+        <div className="hidden md:block h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
+        {/* User profile - Hidden on Mobile */}
+        <div className="hidden md:flex flex-col items-end text-xs">
           <span className="font-semibold text-slate-900 dark:text-slate-100">Jane Doe</span>
-          <span className="text-slate-500 dark:text-slate-400 text-[10px]">Senior HR Lead</span>
         </div>
       </div>
     </header>
