@@ -312,7 +312,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
                 <FileText className="h-4 w-4 text-indigo-500" />
                 4. Narrative Psychological Assessment
               </h4>
-              <div className="h-32 overflow-y-auto text-xs text-slate-700 dark:text-slate-350 bg-indigo-50/15 p-4 rounded-xl leading-relaxed font-bold">
+              <div className="h-32 overflow-y-auto text-xs text-slate-700 dark:text-slate-400 p-4 rounded-xl leading-relaxed font-semibold">
                 {detail.mentalAbility}
               </div>
             </div>
@@ -324,7 +324,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
           <button
             id="close-raw-score-modal-btn"
             onClick={onClose}
-            className="rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-750 px-4.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            className="rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-750 px-4.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-500 transition-colors cursor-pointer"
           >
             Close Details
           </button>
