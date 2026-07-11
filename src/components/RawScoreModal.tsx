@@ -29,12 +29,9 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
               <Brain className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                 Detailed Applicant Psychometric Profile
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor}
-              </p>
+              </h2>
             </div>
           </div>
           <button
@@ -48,6 +45,10 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
 
         {/* Modal Body */}
         <div className="mt-6 space-y-6">
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor}
+          </h3>
+
           {/* Metadata Block */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-950/60 text-xs border border-slate-150/40 dark:border-slate-850">
             <div>
@@ -104,7 +105,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
                     <thead>
                       <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-150 dark:border-slate-800 text-[10px] font-bold text-slate-500 uppercase">
                         <th className="p-2.5">Dimension</th>
-                        <th className="p-2.5">Classification Rating</th>
+                        <th className="p-2.5">Classifications</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-850 text-slate-700 dark:text-slate-350">
@@ -176,7 +177,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
                           <thead>
                             <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-150 dark:border-slate-800 text-[10px] font-bold text-slate-500 uppercase">
                               <th className="p-2.5">Competency Area</th>
-                              <th className="p-2.5">Rating</th>
+                              <th className="p-2.5">Classifications</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-slate-850 text-slate-700 dark:text-slate-350">
