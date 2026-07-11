@@ -15,7 +15,11 @@ export default function App() {
     return saved ? saved === "true" : false;
   });
   
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
+    const saved = localStorage.getItem("sidebarOpen");
+    return saved ? saved === "true" : true;
+  });
+  
   const [activeTab, setActiveTab] = useState<"dashboard" | "analytics">("dashboard");
 
   // Load summary results from localStorage or mockData
@@ -70,6 +74,10 @@ export default function App() {
       document.documentElement.classList.remove("dark");
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    localStorage.setItem("sidebarOpen", String(sidebarOpen));
+  }, [sidebarOpen]);
 
   // Sync state to local storage on changes
   useEffect(() => {
@@ -176,7 +184,7 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="min-h-screen bg-[#F1F5F9] text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
       
       {/* Printable Area - Rendered outside main layout, visible only on @media print */}
       <PrintPreview 
@@ -189,8 +197,6 @@ export default function App() {
         
         {/* Sticky Top Header */}
         <Header
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
         />
@@ -206,7 +212,7 @@ export default function App() {
           />
 
           {/* Main Workspace Frame */}
-          <main className="flex-1 overflow-y-auto bg-[#F8FAFC] p-6 dark:bg-slate-900/40">
+          <main className="flex-1 overflow-y-auto bg-[#F1F5F9] p-6 dark:bg-slate-900/40">
             {activeTab === "dashboard" ? (
               <DashboardTab
                 finalResults={summaryResults}

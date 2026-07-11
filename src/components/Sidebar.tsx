@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, BarChart2, Users, ClipboardCheck, ChevronLeft } from "lucide-react";
+import { LayoutDashboard, BarChart2, ClipboardCheck, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -42,21 +42,22 @@ export default function Sidebar({
 
       <aside
         id="app-sidebar"
-        className={`fixed top-16 bottom-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed md:relative top-16 md:top-0 bottom-0 left-0 z-40 flex flex-col bg-white dark:bg-slate-950 transition-all duration-300 ease-in-out shrink-0 border-r border-slate-200 dark:border-slate-800 overflow-visible ${
+          isOpen ? "w-64" : "w-16 max-md:w-0 max-md:border-r-0"
         }`}
       >
-        <div className="flex flex-col justify-between h-full p-4">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between px-2">
-              <button
-                onClick={() => setIsOpen(false)}
-                className="rounded-lg p-1 hover:bg-slate-50 dark:hover:bg-slate-900 md:hidden text-slate-400 dark:text-slate-500"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-            </div>
+        {/* Absolute Edge Toggle Button */}
+        <button
+          id="sidebar-toggle-btn"
+          onClick={() => setIsOpen(!isOpen)}
+          className="absolute top-1.5 -right-3 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-850 shadow-sm cursor-pointer transition-transform duration-200"
+          aria-label="Toggle Sidebar"
+        >
+          {isOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </button>
 
+        <div className="flex flex-col justify-between h-full px-3 py-7 overflow-hidden">
+          <div className="space-y-3">
             <nav className="space-y-1.5" aria-label="Sidebar Navigation">
               {menuItems.map((item) => {
                 const Icon = item.icon;
@@ -72,19 +73,26 @@ export default function Sidebar({
                         setIsOpen(false);
                       }
                     }}
-                    className={`flex w-full items-start gap-3 rounded-lg px-3 py-3 text-left transition-all duration-200 ${
+                    className={`flex items-center rounded-lg transition-all duration-200 cursor-pointer ${
+                      isOpen
+                        ? "w-full px-3 py-3 gap-3 justify-start"
+                        : "w-10 h-10 justify-center mx-auto"
+                    } ${
                       isActive
                         ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 font-semibold"
                         : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-200"
                     }`}
+                    title={!isOpen ? item.label : undefined}
                   >
-                    <Icon className={`mt-0.5 h-4.5 w-4.5 shrink-0 ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"}`} />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold">{item.label}</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal leading-tight mt-0.5">
-                        {item.description}
-                      </span>
-                    </div>
+                    <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"}`} />
+                    {isOpen && (
+                      <div className="flex flex-col text-left">
+                        <span className="text-sm font-semibold">{item.label}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal leading-tight mt-0.5">
+                          {item.description}
+                        </span>
+                      </div>
+                    )}
                   </button>
                 );
               })}
@@ -92,16 +100,24 @@ export default function Sidebar({
           </div>
 
           {/* Footer branding details */}
-          <div className="border-t border-slate-100 pt-4 dark:border-slate-900 text-center md:text-left">
-            <div className="flex items-center gap-2 px-2 text-slate-400 dark:text-slate-500">
-              <ClipboardCheck className="h-4 w-4 shrink-0 text-indigo-500" />
-              <span className="text-[10px] font-mono tracking-wider uppercase font-semibold">
-                HRD | Continental Sales Inc.
-              </span>
-            </div>
-            <p className="mt-1.5 px-2 text-[10px] text-slate-400 dark:text-slate-600 font-medium">
-              Psychometric reporting. July 2026.
-            </p>
+          <div className="border-t border-slate-100 pt-4 dark:border-slate-900">
+            {isOpen ? (
+              <>
+                <div className="flex items-center gap-2 px-2 text-slate-400 dark:text-slate-500">
+                  <ClipboardCheck className="h-4 w-4 shrink-0 text-indigo-500" />
+                  <span className="text-[10px] font-mono tracking-wider uppercase font-semibold">
+                    HRD | Continental Sales Inc.
+                  </span>
+                </div>
+                <p className="mt-1.5 px-2 text-[10px] text-slate-400 dark:text-slate-600 font-medium">
+                  Psychometric reporting. July 2026.
+                </p>
+              </>
+            ) : (
+              <div className="flex justify-center">
+                <ClipboardCheck className="h-5 w-5 text-indigo-500" title="HRD | Continental Sales Inc. | Psychometric reporting" />
+              </div>
+            )}
           </div>
         </div>
       </aside>

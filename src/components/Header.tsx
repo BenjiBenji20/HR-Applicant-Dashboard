@@ -1,31 +1,18 @@
 import React from "react";
-import { Menu, Briefcase } from "lucide-react";
+import { Briefcase } from "lucide-react";
 
 interface HeaderProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
   darkMode: boolean;
   setDarkMode: (dark: boolean) => void;
 }
 
 export default function Header({
-  sidebarOpen,
-  setSidebarOpen,
   darkMode,
   setDarkMode,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white px-6 dark:border-slate-800 dark:bg-slate-950 transition-colors duration-200 shrink-0">
       <div className="flex items-center gap-3">
-        <button
-          id="sidebar-toggle-btn"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-200 transition-colors"
-          aria-label="Toggle Sidebar"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-        
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-100 dark:bg-indigo-950 dark:text-indigo-400">
             <Briefcase className="h-5 w-5" />
