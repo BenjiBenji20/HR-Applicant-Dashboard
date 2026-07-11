@@ -64,6 +64,7 @@ export interface ApplicantDetail {
     index1Assessment: string; // Long form AI text block
     index2Assessment: string; // Long form AI text block
   };
+  allTestTimeConsumed: AllTestTimeConsumed;
 }
 
 // Compatibility interface for AnalyticsTab.tsx, which we must not modify
@@ -79,4 +80,30 @@ export interface ApplicantFinalResult extends ApplicantSummary {
     };
   };
   psychometric: string;
+}
+
+
+// time consumed types
+export interface TestTime {
+  consumedTime: string; // 1m 32s
+  testItem: number;
+  timeFrame: string; // 4 mins
+}
+
+export interface AllTestTimeConsumed {
+  cfitTestTime?: {
+    test1: TestTime, test2: TestTime, test3: TestTime, test4: TestTime
+  },
+  jcTestTime?: {
+    test1: TestTime
+  },
+  fitPlanningTestTime?: {
+    test1: TestTime
+  },
+  "16pfTestTime"?: {
+    test1: TestTime, test2: TestTime, test3: TestTime, test4: TestTime
+  },
+  supervTestTime?: {
+    test1: TestTime
+  }
 }

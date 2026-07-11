@@ -68,6 +68,29 @@ export const initialDetailedProfiles: Record<string, ApplicantDetail> = {
     supervisoryIndexesAI: {
       index1Assessment: "Demonstrates strong administrative oversight with minimal micromanagement tendencies.",
       index2Assessment: "Highly empathetic leadership profile prioritizing long-term team retention."
+    },
+    allTestTimeConsumed: {
+      cfitTestTime: {
+        test1: { consumedTime: "1m 32s", testItem: 13, timeFrame: "3 mins" },
+        test2: { consumedTime: "2m 15s", testItem: 14, timeFrame: "4 mins" },
+        test3: { consumedTime: "1m 55s", testItem: 13, timeFrame: "4 mins" },
+        test4: { consumedTime: "2m 05s", testItem: 10, timeFrame: "4 mins" }
+      },
+      jcTestTime: {
+        test1: { consumedTime: "8m 45s", testItem: 30, timeFrame: "15 mins" }
+      },
+      fitPlanningTestTime: {
+        test1: { consumedTime: "12m 10s", testItem: 40, timeFrame: "20 mins" }
+      },
+      "16pfTestTime": {
+        test1: { consumedTime: "4m 10s", testItem: 45, timeFrame: "8 mins" },
+        test2: { consumedTime: "5m 25s", testItem: 45, timeFrame: "8 mins" },
+        test3: { consumedTime: "6m 12s", testItem: 45, timeFrame: "8 mins" },
+        test4: { consumedTime: "4m 50s", testItem: 50, timeFrame: "10 mins" }
+      },
+      supervTestTime: {
+        test1: { consumedTime: "14m 15s", testItem: 60, timeFrame: "25 mins" }
+      }
     }
   },
   "2b9a7c8d-3400-52ea-8134-c7a687df554a": {
@@ -96,6 +119,29 @@ export const initialDetailedProfiles: Record<string, ApplicantDetail> = {
     supervisoryIndexesAI: {
       index1Assessment: "Excellent at building team consensus and driving employee engagement.",
       index2Assessment: "Strong interpersonal focus, highly effective at managing complex employee disputes."
+    },
+    allTestTimeConsumed: {
+      cfitTestTime: {
+        test1: { consumedTime: "1m 20s", testItem: 13, timeFrame: "3 mins" },
+        test2: { consumedTime: "2m 05s", testItem: 14, timeFrame: "4 mins" },
+        test3: { consumedTime: "1m 40s", testItem: 13, timeFrame: "4 mins" },
+        test4: { consumedTime: "1m 58s", testItem: 10, timeFrame: "4 mins" }
+      },
+      jcTestTime: {
+        test1: { consumedTime: "7m 30s", testItem: 30, timeFrame: "15 mins" }
+      },
+      fitPlanningTestTime: {
+        test1: { consumedTime: "10m 15s", testItem: 40, timeFrame: "20 mins" }
+      },
+      "16pfTestTime": {
+        test1: { consumedTime: "3m 50s", testItem: 45, timeFrame: "8 mins" },
+        test2: { consumedTime: "4m 55s", testItem: 45, timeFrame: "8 mins" },
+        test3: { consumedTime: "5m 30s", testItem: 45, timeFrame: "8 mins" },
+        test4: { consumedTime: "4m 15s", testItem: 50, timeFrame: "10 mins" }
+      },
+      supervTestTime: {
+        test1: { consumedTime: "12m 45s", testItem: 60, timeFrame: "25 mins" }
+      }
     }
   }
 };

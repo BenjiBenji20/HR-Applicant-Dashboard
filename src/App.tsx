@@ -23,7 +23,13 @@ export default function App() {
     const saved = localStorage.getItem("summaryResults");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed.length > 0 && (!parsed[0].scores || "16pf" in parsed[0].scores)) {
+          localStorage.removeItem("summaryResults");
+          localStorage.removeItem("detailedProfiles");
+          return initialSummaryResults;
+        }
+        return parsed;
       } catch (e) {
         console.error("Failed to parse saved summary results:", e);
       }
@@ -36,7 +42,13 @@ export default function App() {
     const saved = localStorage.getItem("detailedProfiles");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        const firstKey = Object.keys(parsed)[0];
+        if (firstKey && !parsed[firstKey].allTestTimeConsumed) {
+          localStorage.removeItem("detailedProfiles");
+          return initialDetailedProfiles;
+        }
+        return parsed;
       } catch (e) {
         console.error("Failed to parse saved detailed profiles:", e);
       }
