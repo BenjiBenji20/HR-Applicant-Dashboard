@@ -6,8 +6,8 @@ import AnalyticsTab from "./components/AnalyticsTab";
 import RawScoreModal from "./components/RawScoreModal";
 import AIPsychometricModal from "./components/AIPsychometricModal";
 import PrintPreview from "./components/PrintPreview";
-import { initialFinalResults, initialRawScores } from "./data/mockData";
-import { ApplicantFinalResult, ApplicantRawScore } from "./types";
+import { initialSummaryResults, initialDetailedProfiles } from "./data/mockData";
+import { ApplicantSummary, ApplicantDetail, ApplicantFinalResult } from "./types";
 
 export default function App() {
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -18,26 +18,36 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<"dashboard" | "analytics">("dashboard");
 
-  // Load final results from localStorage or mockData
-  const [finalResults, setFinalResults] = useState<ApplicantFinalResult[]>(() => {
-    const saved = localStorage.getItem("finalResults");
+  // Load summary results from localStorage or mockData
+  const [summaryResults, setSummaryResults] = useState<ApplicantSummary[]>(() => {
+    const saved = localStorage.getItem("summaryResults");
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch (e) {
-        console.error("Failed to parse saved final results:", e);
+        console.error("Failed to parse saved summary results:", e);
       }
     }
-    return initialFinalResults;
+    return initialSummaryResults;
   });
 
-  // Keep track of raw scores in memory
-  const [rawScores, setRawScores] = useState<ApplicantRawScore[]>(initialRawScores);
+  // Load detailed profiles from localStorage or mockData
+  const [detailedProfiles, setDetailedProfiles] = useState<Record<string, ApplicantDetail>>(() => {
+    const saved = localStorage.getItem("detailedProfiles");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse saved detailed profiles:", e);
+      }
+    }
+    return initialDetailedProfiles;
+  });
 
   // Modal / Drawer Active States
-  const [activeRawScoreApplicant, setActiveRawScoreApplicant] = useState<ApplicantRawScore | null>(null);
-  const [activeAIPsychometricApplicant, setActiveAIPsychometricApplicant] = useState<ApplicantFinalResult | null>(null);
-  const [printingApplicant, setPrintingApplicant] = useState<ApplicantFinalResult | null>(null);
+  const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
+  const [activeAIPsychometricApplicant, setActiveAIPsychometricApplicant] = useState<ApplicantSummary | null>(null);
+  const [printingApplicant, setPrintingApplicant] = useState<ApplicantSummary | null>(null);
 
   // Sync Dark Mode state to root document
   useEffect(() => {
@@ -49,20 +59,29 @@ export default function App() {
     }
   }, [darkMode]);
 
-  // Sync finalResults to local storage on changes
+  // Sync state to local storage on changes
   useEffect(() => {
-    localStorage.setItem("finalResults", JSON.stringify(finalResults));
-  }, [finalResults]);
+    localStorage.setItem("summaryResults", JSON.stringify(summaryResults));
+  }, [summaryResults]);
+
+  useEffect(() => {
+    localStorage.setItem("detailedProfiles", JSON.stringify(detailedProfiles));
+  }, [detailedProfiles]);
 
   // Handlers for App level actions
   const handleDeleteRows = (ids: string[]) => {
-    const updated = finalResults.filter((app) => !ids.includes(app.id));
-    setFinalResults(updated);
+    const updated = summaryResults.filter((app) => !ids.includes(app.id));
+    setSummaryResults(updated);
   };
 
   const handleDownloadRows = (ids: string[]) => {
-    const selectedData = finalResults.filter((app) => ids.includes(app.id));
-    const blob = new Blob([JSON.stringify(selectedData, null, 2)], {
+    const selectedSummary = summaryResults.filter((app) => ids.includes(app.id));
+    const selectedDetailed = ids.map(id => detailedProfiles[id]).filter(Boolean);
+    const downloadData = {
+      summaries: selectedSummary,
+      details: selectedDetailed
+    };
+    const blob = new Blob([JSON.stringify(downloadData, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -76,27 +95,30 @@ export default function App() {
   };
 
   const handleOpenRawScores = (id: string) => {
-    const found = rawScores.find((r) => r.id === id);
-    if (found) {
-      setActiveRawScoreApplicant(found);
-    }
+    setActiveDetailId(id);
   };
 
-  const handleOpenAIModal = (applicant: ApplicantFinalResult) => {
+  const handleOpenAIModal = (applicant: ApplicantSummary) => {
     setActiveAIPsychometricApplicant(applicant);
   };
 
   const handleSavePsychometric = (id: string, updatedPsychometric: string) => {
-    const updated = finalResults.map((app) => {
-      if (app.id === id) {
-        return { ...app, psychometric: updatedPsychometric };
+    setDetailedProfiles((prev) => {
+      const existing = prev[id];
+      if (existing) {
+        return {
+          ...prev,
+          [id]: {
+            ...existing,
+            mentalAbility: updatedPsychometric,
+          },
+        };
       }
-      return app;
+      return prev;
     });
-    setFinalResults(updated);
   };
 
-  const handlePrintApplicant = (applicant: ApplicantFinalResult) => {
+  const handlePrintApplicant = (applicant: ApplicantSummary) => {
     setPrintingApplicant(applicant);
     // Give state a short delay to render before firing native browser print
     setTimeout(() => {
@@ -104,11 +126,51 @@ export default function App() {
     }, 150);
   };
 
+  // Map the new schemas to ApplicantFinalResult compatibility type for the unmodified AnalyticsTab
+  const analyticsResults = summaryResults.map((app) => {
+    const detail = detailedProfiles[app.id];
+    
+    // Map classification rating to a numeric-like Sten string that AnalyticsTab parses:
+    // AnalyticsTab: app.scores["16pf"].match(/\d+/)?.[0] || "5"
+    const mapToSten = (rating?: string) => {
+      if (!rating) return "Sten 5";
+      const r = rating.toLowerCase();
+      if (r === "superior") return "Sten 10 (Superior)";
+      if (r === "above average") return "Sten 8 (Above Average)";
+      if (r === "high average") return "Sten 7 (High Average)";
+      if (r === "average") return "Sten 5 (Average)";
+      if (r === "low average") return "Sten 4 (Low Average)";
+      if (r === "below average") return "Sten 2 (Below Average)";
+      return "Sten 1 (Low)";
+    };
+    
+    const pfStenString = mapToSten(detail?.detailed16pf?.emotionalStability);
+    
+    return {
+      ...app,
+      scores: {
+        ...app.scores,
+        "16pf": pfStenString,
+        supervisory: {
+          management: detail?.supervisory?.management || "Average",
+          supervision: detail?.supervisory?.supervision || "Average",
+          employee: detail?.supervisory?.employeeRelations || "Average",
+          humanRels: detail?.supervisory?.humanRelationsPractices || "Average",
+          totalEvaluation: app.scores.supervisoryTotalEvaluation || "Average"
+        }
+      },
+      psychometric: detail?.mentalAbility || ""
+    } as ApplicantFinalResult;
+  });
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
       
       {/* Printable Area - Rendered outside main layout, visible only on @media print */}
-      <PrintPreview applicant={printingApplicant || (finalResults.length > 0 ? finalResults[0] : null)} />
+      <PrintPreview 
+        applicant={printingApplicant || (summaryResults.length > 0 ? summaryResults[0] : null)} 
+        details={printingApplicant ? (detailedProfiles[printingApplicant.id] || null) : (summaryResults.length > 0 ? (detailedProfiles[summaryResults[0].id] || null) : null)} 
+      />
 
       {/* Main App Canvas */}
       <div className="flex h-screen flex-col print:hidden">
@@ -135,7 +197,7 @@ export default function App() {
           <main className="flex-1 overflow-y-auto bg-[#F8FAFC] p-6 dark:bg-slate-900/40">
             {activeTab === "dashboard" ? (
               <DashboardTab
-                finalResults={finalResults}
+                finalResults={summaryResults}
                 onDeleteRows={handleDeleteRows}
                 onDownloadRows={handleDownloadRows}
                 onOpenAIModal={handleOpenAIModal}
@@ -143,7 +205,7 @@ export default function App() {
                 onPrintApplicant={handlePrintApplicant}
               />
             ) : (
-              <AnalyticsTab finalResults={finalResults} />
+              <AnalyticsTab finalResults={analyticsResults} />
             )}
           </main>
         </div>
@@ -151,11 +213,12 @@ export default function App() {
 
       {/* Pop-up Modals Portal */}
 
-      {/* Raw score detailed dialog */}
-      {activeRawScoreApplicant && (
+      {/* Detailed Profile View Modal */}
+      {activeDetailId && (
         <RawScoreModal
-          rawScore={activeRawScoreApplicant}
-          onClose={() => setActiveRawScoreApplicant(null)}
+          summary={summaryResults.find((r) => r.id === activeDetailId) || null}
+          detail={detailedProfiles[activeDetailId] || null}
+          onClose={() => setActiveDetailId(null)}
         />
       )}
 
@@ -163,6 +226,7 @@ export default function App() {
       {activeAIPsychometricApplicant && (
         <AIPsychometricModal
           applicant={activeAIPsychometricApplicant}
+          details={detailedProfiles[activeAIPsychometricApplicant.id] || null}
           onClose={() => setActiveAIPsychometricApplicant(null)}
           onSave={handleSavePsychometric}
         />

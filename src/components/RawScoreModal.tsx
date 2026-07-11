@@ -1,42 +1,39 @@
 import React from "react";
-import { X, Cpu, Clipboard, BarChart3, AlertCircle } from "lucide-react";
-import { ApplicantRawScore } from "../types";
+import { X, Cpu, Clipboard, BarChart3, AlertCircle, Award, Brain, FileText } from "lucide-react";
+import { ApplicantSummary, ApplicantDetail } from "../types";
 
 interface RawScoreModalProps {
-  rawScore: ApplicantRawScore | null;
+  summary: ApplicantSummary | null;
+  detail: ApplicantDetail | null;
   onClose: () => void;
 }
 
-export default function RawScoreModal({ rawScore, onClose }: RawScoreModalProps) {
-  if (!rawScore) return null;
-
-  const { cfit, comprehension, planning, "16pf": pf16, supervisory } = rawScore.scores;
-
-  const totalCfit = cfit.test1 + cfit.test2 + cfit.test3 + cfit.test4;
+export default function RawScoreModal({ summary, detail, onClose }: RawScoreModalProps) {
+  if (!summary) return null;
 
   return (
     <div
       id="raw-score-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs transition-opacity duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-xs transition-opacity duration-200"
       onClick={onClose}
     >
       <div
         id="raw-score-modal-content"
-        className="relative w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all duration-300 max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-4xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all duration-300 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-              <Cpu className="h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+              <Brain className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                Applicant Raw Score Details
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                Detailed Applicant Psychometric Profile
               </h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500">
-                {rawScore.metadata.fullName} &bull; {rawScore.intent.positionAppliedFor}
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor}
               </p>
             </div>
           </div>
@@ -45,177 +42,218 @@ export default function RawScoreModal({ rawScore, onClose }: RawScoreModalProps)
             onClick={onClose}
             className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 transition-colors"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Modal Body */}
         <div className="mt-6 space-y-6">
-          {/* Metadata Grid */}
-          <div className="grid grid-cols-2 gap-4 rounded-lg bg-slate-50 p-4 dark:bg-slate-950 text-xs">
+          {/* Metadata Block */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-950/60 text-xs border border-slate-150/40 dark:border-slate-850">
             <div>
-              <span className="text-slate-400 dark:text-slate-500">Email Address:</span>
-              <p className="font-medium text-slate-800 dark:text-slate-200 mt-0.5">{rawScore.metadata.emailAddress}</p>
+              <span className="text-slate-450 dark:text-slate-500 block mb-0.5">Email Address</span>
+              <p className="font-semibold text-slate-800 dark:text-slate-200">{summary.metadata.emailAddress}</p>
             </div>
             <div>
-              <span className="text-slate-400 dark:text-slate-500">Submission Timestamp:</span>
-              <p className="font-medium text-slate-800 dark:text-slate-200 mt-0.5">
-                {new Date(rawScore.metadata.timestamp).toLocaleString()}
+              <span className="text-slate-450 dark:text-slate-500 block mb-0.5">Submitted On</span>
+              <p className="font-semibold text-slate-800 dark:text-slate-200">
+                {new Date(summary.metadata.timestamp).toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <span className="text-slate-450 dark:text-slate-500 block mb-0.5">Assessment Track</span>
+              <p className="font-semibold text-indigo-600 dark:text-indigo-400">
+                {summary.metadata.supervisoryTest ? "Supervisory Track" : "Standard Track"}
               </p>
             </div>
           </div>
 
-          {/* Section 1: CFIT Cognitive Performance */}
-          <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mb-3">
-              <BarChart3 className="h-3.5 w-3.5 text-indigo-500" />
-              CFIT (Culture Fair Intelligence Test) Raw Scores
+          {/* Section 1: Cognitive Performance */}
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-950/20">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2 mb-4">
+              <BarChart3 className="h-4 w-4 text-indigo-500" />
+              Cognitive Aptitude Profile (Classifications)
             </h4>
-            <div className="grid grid-cols-4 gap-3 text-center">
-              <div className="rounded-md bg-slate-50/50 dark:bg-slate-950/40 p-2.5 border border-slate-100 dark:border-slate-800/50">
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">Series (T1)</span>
-                <p className="text-base font-semibold text-slate-900 dark:text-slate-100 mt-1">{cfit.test1}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="rounded-lg bg-slate-50/50 dark:bg-slate-950/40 p-3.5 border border-slate-100 dark:border-slate-850">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block mb-1 uppercase tracking-wider font-semibold">CFIT Fluid Intelligence</span>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{summary.scores.cfit}</p>
               </div>
-              <div className="rounded-md bg-slate-50/50 dark:bg-slate-950/40 p-2.5 border border-slate-100 dark:border-slate-800/50">
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">Classif. (T2)</span>
-                <p className="text-base font-semibold text-slate-900 dark:text-slate-100 mt-1">{cfit.test2}</p>
+              <div className="rounded-lg bg-slate-50/50 dark:bg-slate-950/40 p-3.5 border border-slate-100 dark:border-slate-850">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block mb-1 uppercase tracking-wider font-semibold">Verbal Comprehension</span>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{summary.scores.comprehension}</p>
               </div>
-              <div className="rounded-md bg-slate-50/50 dark:bg-slate-950/40 p-2.5 border border-slate-100 dark:border-slate-800/50">
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">Matrices (T3)</span>
-                <p className="text-base font-semibold text-slate-900 dark:text-slate-100 mt-1">{cfit.test3}</p>
+              <div className="rounded-lg bg-slate-50/50 dark:bg-slate-950/40 p-3.5 border border-slate-100 dark:border-slate-850">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block mb-1 uppercase tracking-wider font-semibold">Planning & Organization</span>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{summary.scores.planning}</p>
               </div>
-              <div className="rounded-md bg-slate-50/50 dark:bg-slate-950/40 p-2.5 border border-slate-100 dark:border-slate-800/50">
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">Topology (T4)</span>
-                <p className="text-base font-semibold text-slate-900 dark:text-slate-100 mt-1">{cfit.test4}</p>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-between border-t border-slate-200 dark:border-slate-800/60 pt-2.5 text-xs">
-              <span className="text-slate-500 dark:text-slate-400">Total Raw Score Sum:</span>
-              <span className="font-bold text-indigo-600 dark:text-indigo-400">{totalCfit} / 50</span>
             </div>
           </div>
 
-          {/* Section 2: Core Cognitive Abilities */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4 space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Comprehension Test
-              </h4>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">{comprehension}%</span>
-                <span className="text-[10px] font-medium bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 px-2 py-0.5 rounded-full">
-                  {comprehension >= 85 ? "Excellent" : comprehension >= 70 ? "Satisfactory" : "Review"}
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
-                <div
-                  className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
-                  style={{ width: `${comprehension}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                Tests comprehension of work standards, logical deduction, and verbal intelligence.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4 space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Planning Test
-              </h4>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">{planning}%</span>
-                <span className="text-[10px] font-medium bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400 px-2 py-0.5 rounded-full">
-                  {planning >= 85 ? "Strategic" : planning >= 70 ? "Methodical" : "Developing"}
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
-                <div
-                  className="bg-indigo-500 h-1.5 rounded-full transition-all duration-500"
-                  style={{ width: `${planning}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                Measures capability to prioritize tasks, foresee risks, and design structured workflows.
-              </p>
-            </div>
-          </div>
-
-          {/* Section 3: 16PF & Supervisory */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 16PF Personality Sten */}
-            <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4 space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                16PF Sten Score
-              </h4>
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-3xl font-extrabold text-purple-600 dark:text-purple-400">{pf16}</span>
-                  <span className="text-xs text-slate-400 dark:text-slate-500"> / 10 Sten</span>
+          {/* Section 2: Detailed Personality (16PF Table) */}
+          {detail && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 16PF detailed table */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-950/20">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2 mb-3">
+                  <Cpu className="h-4 w-4 text-purple-500" />
+                  16PF Personality Dimensions
+                </h4>
+                <div className="overflow-hidden rounded-lg border border-slate-150 dark:border-slate-800 mt-2">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-150 dark:border-slate-800 text-[10px] font-bold text-slate-500 uppercase">
+                        <th className="p-2.5">Dimension</th>
+                        <th className="p-2.5">Classification Rating</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-850 text-slate-700 dark:text-slate-350">
+                      <tr>
+                        <td className="p-2.5 font-medium">Emotional Stability</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.emotionalStability}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Sense of Responsibility</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.senseOfResponsibility}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Conscientiousness</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.conscientiousness}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Assertiveness</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.assertiveness}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Confidence</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.confidence}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Flexibility</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.flexibility}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Open-Mindedness</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.openMindedness}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Self-Reliance</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.selfReliance}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Sociability</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.sociability}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Trust & Acceptance</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.trustAcceptance}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Objectivity</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.objectivity}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2.5 font-medium">Optimism & Liveliness</td>
+                        <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.detailed16pf.optimismLiveliness}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-                <span className="text-[10px] font-medium bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400 px-2 py-0.5 rounded-full">
-                  {pf16 >= 8 ? "High Range" : pf16 >= 4 ? "Average Range" : "Low Range"}
-                </span>
               </div>
-              
-              {/* Custom Sten range visualization */}
-              <div className="flex h-3 w-full gap-0.5 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-full flex-1 transition-all ${
-                      i < pf16
-                        ? "bg-purple-500 dark:bg-purple-400"
-                        : "bg-slate-200 dark:bg-slate-700"
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                Sten 1-3 indicates highly reserved and reflective behavior; 4-7 average; 8-10 highly expressive, socially bold, or warm.
-              </p>
-            </div>
 
-            {/* Supervisory Sub-section */}
-            <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-                Supervisory Evaluation
-              </h4>
-              {supervisory ? (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-400">
-                    <div className="flex justify-between border-b border-slate-50 dark:border-slate-800/40 pb-1">
-                      <span>Management:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">{supervisory.management}/20</span>
+              {/* Supervisory Column */}
+              <div className="space-y-6">
+                {/* Supervisory competencies */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-950/20">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2 mb-3">
+                    <Award className="h-4 w-4 text-emerald-500" />
+                    Supervisory Leadership Capabilities
+                  </h4>
+                  {summary.metadata.supervisoryTest ? (
+                    <div className="space-y-3">
+                      <div className="overflow-hidden rounded-lg border border-slate-150 dark:border-slate-800 mt-2">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-150 dark:border-slate-800 text-[10px] font-bold text-slate-500 uppercase">
+                              <th className="p-2.5">Competency Area</th>
+                              <th className="p-2.5">Rating</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-850 text-slate-700 dark:text-slate-350">
+                            <tr>
+                              <td className="p-2.5 font-medium">Management Logic</td>
+                              <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.supervisory.management}</td>
+                            </tr>
+                            <tr>
+                              <td className="p-2.5 font-medium">Supervision Quality</td>
+                              <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.supervisory.supervision}</td>
+                            </tr>
+                            <tr>
+                              <td className="p-2.5 font-medium">Employee Relations</td>
+                              <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.supervisory.employeeRelations}</td>
+                            </tr>
+                            <tr>
+                              <td className="p-2.5 font-medium">Human Relations Practices</td>
+                              <td className="p-2.5 font-semibold text-slate-900 dark:text-slate-150">{detail.supervisory.humanRelationsPractices}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between rounded-xl bg-emerald-50/50 p-3.5 dark:bg-emerald-950/20 text-xs border border-emerald-100/30">
+                        <span className="font-semibold text-emerald-800 dark:text-emerald-300">Composite Evaluation:</span>
+                        <span className="font-bold text-emerald-700 dark:text-emerald-400 text-sm">
+                          {summary.scores.supervisoryTotalEvaluation}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between border-b border-slate-50 dark:border-slate-800/40 pb-1">
-                      <span>Supervision:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">{supervisory.supervision}/20</span>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-40 text-center text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg">
+                      <AlertCircle className="h-6 w-6 mb-2.5 text-slate-300" />
+                      <span className="text-xs font-semibold">Standard Evaluation Only</span>
+                      <p className="text-[10px] mt-1 max-w-xs px-4">This applicant did not take the supervisory test module (Rank-and-File Track).</p>
                     </div>
-                    <div className="flex justify-between border-b border-slate-50 dark:border-slate-800/40 pb-1">
-                      <span>Employee:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">{supervisory.employee}/20</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-50 dark:border-slate-800/40 pb-1">
-                      <span>Human Rels:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">{supervisory.humanRels}/20</span>
+                  )}
+                </div>
+
+                {/* AI supervisory indexes (if applicable) */}
+                {summary.metadata.supervisoryTest && (
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-950/20 space-y-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
+                      <Cpu className="h-4 w-4 text-indigo-500" />
+                      AI Supervisory Oversight Assessments
+                    </h4>
+                    <div className="space-y-3.5 text-xs">
+                      <div className="space-y-1">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 block">Management & Operational Oversight Index</span>
+                        <p className="text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850 leading-relaxed italic">
+                          "{detail.supervisoryIndexesAI.index1Assessment}"
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 block">Consensus-Building & Team Dynamics Index</span>
+                        <p className="text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-850 leading-relaxed italic">
+                          "{detail.supervisoryIndexesAI.index2Assessment}"
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-between rounded bg-indigo-50/50 p-2 dark:bg-indigo-950/20 text-xs">
-                    <span className="font-medium text-indigo-700 dark:text-indigo-300">Composite Score:</span>
-                    <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                      {supervisory.scores.toFixed(2)} / 20
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-24 text-center text-slate-400 dark:text-slate-500">
-                  <AlertCircle className="h-5 w-5 mb-1.5" />
-                  <span className="text-[11px]">Supervisory Assessment Not Taken</span>
-                  <p className="text-[9px] mt-0.5">Applied for non-supervisory rank-and-file track</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Section 3: Narrative summary */}
+          {detail?.mentalAbility && (
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-950/20">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2 mb-3.5">
+                <FileText className="h-4 w-4 text-indigo-500" />
+                Narrative Psychological Assessment
+              </h4>
+              <p className="text-xs text-slate-650 dark:text-slate-350 bg-indigo-50/15 p-4 rounded-xl border border-indigo-100/20 dark:border-indigo-950/25 leading-relaxed">
+                {detail.mentalAbility}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Modal Footer */}
@@ -223,7 +261,7 @@ export default function RawScoreModal({ rawScore, onClose }: RawScoreModalProps)
           <button
             id="close-raw-score-modal-btn"
             onClick={onClose}
-            className="rounded-lg bg-slate-150 dark:bg-slate-800 px-4.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
+            className="rounded-lg bg-slate-100 dark:bg-slate-800 px-4.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
           >
             Close Details
           </button>

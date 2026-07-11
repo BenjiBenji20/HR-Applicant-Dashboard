@@ -1,30 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { X, Sparkles, AlertCircle, Save, RotateCw } from "lucide-react";
-import { ApplicantFinalResult } from "../types";
+import { ApplicantSummary, ApplicantDetail } from "../types";
 
 interface AIPsychometricModalProps {
-  applicant: ApplicantFinalResult;
+  applicant: ApplicantSummary;
+  details: ApplicantDetail | null;
   onClose: () => void;
   onSave: (id: string, updatedPsychometric: string) => void;
 }
 
 export default function AIPsychometricModal({
   applicant,
+  details,
   onClose,
   onSave,
 }: AIPsychometricModalProps) {
   const [loading, setLoading] = useState(false);
-  const [psychometricText, setPsychometricText] = useState(applicant.psychometric);
+  const [psychometricText, setPsychometricText] = useState(details?.mentalAbility || "");
   const [error, setError] = useState<string | null>(null);
 
-  // Trigger AI generation if the psychometric field is currently empty or upon initial load of the modal
+  // Trigger AI generation if the mentalAbility field is currently empty or upon initial load of the modal
   useEffect(() => {
-    if (!applicant.psychometric) {
+    if (!details?.mentalAbility) {
       handleGenerate();
     } else {
-      setPsychometricText(applicant.psychometric);
+      setPsychometricText(details.mentalAbility);
     }
-  }, [applicant.id]);
+  }, [applicant.id, details?.id]);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -33,7 +35,7 @@ export default function AIPsychometricModal({
       const response = await fetch("/api/generate-psychometric", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ applicant }),
+        body: JSON.stringify({ applicant, details }),
       });
       if (!response.ok) {
         throw new Error("Failed to contact the evaluation server.");
@@ -55,6 +57,10 @@ export default function AIPsychometricModal({
     onSave(applicant.id, psychometricText);
     onClose();
   };
+
+  const pf16Summary = details?.detailed16pf
+    ? `Stability: ${details.detailed16pf.emotionalStability}, Responsibility: ${details.detailed16pf.senseOfResponsibility}, Conscientiousness: ${details.detailed16pf.conscientiousness}, Sociability: ${details.detailed16pf.sociability}`
+    : "No detailed 16PF profile available";
 
   return (
     <div
@@ -137,19 +143,19 @@ export default function AIPsychometricModal({
                 </tr>
                 <tr className="border-b border-slate-100 dark:border-slate-800/50">
                   <td className="bg-slate-50/50 px-4 py-2.5 font-semibold text-slate-500 dark:bg-slate-950/20 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">
-                    16PF Profile
+                    16PF Profile Summary
                   </td>
                   <td className="px-4 py-2.5 text-slate-900 dark:text-slate-100">
-                    {applicant.scores["16pf"]}
+                    {pf16Summary}
                   </td>
                 </tr>
-                {applicant.metadata.supervisoryTest && applicant.scores.supervisory && (
+                {applicant.metadata.supervisoryTest && details?.supervisory && (
                   <tr>
                     <td className="bg-slate-50/50 px-4 py-2.5 font-semibold text-slate-500 dark:bg-slate-950/20 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">
                       Supervisory Index
                     </td>
                     <td className="px-4 py-2.5 text-indigo-600 dark:text-indigo-400 font-semibold">
-                      {applicant.scores.supervisory.totalEvaluation} (Mgt: {applicant.scores.supervisory.management}, Supv: {applicant.scores.supervisory.supervision}, Employee: {applicant.scores.supervisory.employee})
+                      {applicant.scores.supervisoryTotalEvaluation} (Mgt: {details.supervisory.management}, Supv: {details.supervisory.supervision}, Employee: {details.supervisory.employeeRelations})
                     </td>
                   </tr>
                 )}

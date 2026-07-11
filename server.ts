@@ -33,7 +33,7 @@ function getAI() {
 // Endpoint to generate psychometric analysis
 app.post("/api/generate-psychometric", async (req, res) => {
   try {
-    const { applicant } = req.body;
+    const { applicant, details } = req.body;
     if (!applicant) {
       return res.status(400).json({ error: "Applicant data is required" });
     }
@@ -41,8 +41,32 @@ app.post("/api/generate-psychometric", async (req, res) => {
     const ai = getAI();
     if (!ai) {
       // Return a smart fallback if key is missing so user still gets a realistic experience
-      const fallbackText = `Based on the psychometric scores, ${applicant.metadata.fullName} demonstrates exceptional capability in ${applicant.scores.comprehension} comprehension and ${applicant.scores.planning} planning. Their CFIT score (${applicant.scores.cfit}) indicates strong general fluid intelligence and abstract reasoning. ${applicant.metadata.supervisoryTest ? `With a supervisory evaluation of ${applicant.scores.supervisory?.totalEvaluation || 'Recommended'}, they show balanced management and employee relationship skills suitable for leadership.` : 'They are highly suited for individual contributor roles requiring dedication and precision.'} Their 16PF profile suggests a steady, collaborative individual who communicates effectively in a team environment.`;
+      let pf16Str = "";
+      if (details?.detailed16pf) {
+        pf16Str = Object.entries(details.detailed16pf)
+          .map(([k, v]) => `${k.replace(/([A-Z])/g, ' $1').toLowerCase()}: ${v}`)
+          .join(", ");
+      }
+      const fallbackText = `Based on the psychometric scores, ${applicant.metadata.fullName} demonstrates capability in ${applicant.scores.comprehension} comprehension and ${applicant.scores.planning} planning. Their CFIT score is evaluated as ${applicant.scores.cfit}. ${applicant.metadata.supervisoryTest ? `With a supervisory total evaluation of ${applicant.scores.supervisoryTotalEvaluation || 'Average'}, they show ${details?.supervisory?.management || 'Average'} management and ${details?.supervisory?.employeeRelations || 'Average'} employee relations skills suitable for leadership.` : 'They are suited for individual contributor roles requiring dedication and precision.'} Their 16PF profile indicates: ${pf16Str || 'steady collaborative work style'}.`;
       return res.json({ text: fallbackText });
+    }
+
+    let pfText = "Not available";
+    if (details?.detailed16pf) {
+      pfText = Object.entries(details.detailed16pf)
+        .map(([k, v]) => `- ${k.replace(/([A-Z])/g, ' $1')}: ${v}`)
+        .join("\n");
+    }
+    let supervisoryText = "";
+    if (applicant.metadata.supervisoryTest && details?.supervisory) {
+      supervisoryText = `
+Supervisory test breakdown (all scored as classification ratings):
+- Management: ${details.supervisory.management}
+- Supervision: ${details.supervisory.supervision}
+- Employee Relations: ${details.supervisory.employeeRelations}
+- Human Relations Practices: ${details.supervisory.humanRelationsPractices}
+- Overall Evaluation: ${applicant.scores.supervisoryTotalEvaluation}
+`;
     }
 
     const prompt = `
@@ -52,25 +76,21 @@ Name: ${applicant.metadata.fullName}
 Position: ${applicant.intent.positionAppliedFor}
 Supervisory Role: ${applicant.metadata.supervisoryTest ? 'Yes' : 'No'}
 
-Scores:
+Scores (all ratings are qualitative classification values, e.g. Low, Average, Superior):
 - CFIT (Culture Fair Intelligence Test): ${applicant.scores.cfit}
 - Comprehension: ${applicant.scores.comprehension}
 - Planning: ${applicant.scores.planning}
-- 16PF (16 Personality Factors): ${applicant.scores["16pf"]}
-${applicant.metadata.supervisoryTest ? `
-Supervisory test breakdown:
-- Management: ${applicant.scores.supervisory?.management}
-- Supervision: ${applicant.scores.supervisory?.supervision}
-- Employee Relations: ${applicant.scores.supervisory?.employee}
-- Human Relations: ${applicant.scores.supervisory?.humanRels}
-- Overall Evaluation: ${applicant.scores.supervisory?.totalEvaluation}
-` : ''}
+
+16PF (16 Personality Factors) Detailed Profile:
+${pfText}
+${supervisoryText}
 
 Output guidelines:
 1. Write a professional, structured, objective, and insightful summary (approx 60-100 words).
 2. Detail their cognitive style (CFIT, comprehension, planning), personality indicators (16PF), and supervisory potential if applicable.
-3. Keep it scannable, actionable, and ready for an HR folder. Do not use generic placeholders.
-4. Output only the plain text summary, do not wrap in markdown quotes.
+3. Avoid using level numbers. Use the classification values.
+4. Keep it scannable, actionable, and ready for an HR folder. Do not use generic placeholders.
+5. Output only the plain text summary, do not wrap in markdown quotes.
 `;
 
     const response = await ai.models.generateContent({

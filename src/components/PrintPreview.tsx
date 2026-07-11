@@ -1,12 +1,13 @@
 import React from "react";
-import { ApplicantFinalResult } from "../types";
+import { ApplicantSummary, ApplicantDetail } from "../types";
 import { Briefcase, Calendar, Mail, FileText, Award, User, Layers } from "lucide-react";
 
 interface PrintPreviewProps {
-  applicant: ApplicantFinalResult | null;
+  applicant: ApplicantSummary | null;
+  details: ApplicantDetail | null;
 }
 
-export default function PrintPreview({ applicant }: PrintPreviewProps) {
+export default function PrintPreview({ applicant, details }: PrintPreviewProps) {
   if (!applicant) return null;
 
   return (
@@ -77,17 +78,17 @@ export default function PrintPreview({ applicant }: PrintPreviewProps) {
           <tbody className="divide-y divide-gray-200">
             <tr>
               <td className="p-2 font-medium">CFIT Fluid Intelligence</td>
-              <td className="p-2 font-mono font-semibold">{applicant.scores.cfit}</td>
+              <td className="p-2 font-semibold text-indigo-900">{applicant.scores.cfit}</td>
               <td className="p-2 text-gray-500">Measures culture-fair fluid logic and non-verbal reasoning.</td>
             </tr>
             <tr>
               <td className="p-2 font-medium">Verbal Comprehension</td>
-              <td className="p-2 font-semibold">{applicant.scores.comprehension}</td>
+              <td className="p-2 font-semibold text-indigo-900">{applicant.scores.comprehension}</td>
               <td className="p-2 text-gray-500">Measures comprehension of work policies, standards, and directives.</td>
             </tr>
             <tr>
               <td className="p-2 font-medium">Planning & Organization</td>
-              <td className="p-2 font-semibold">{applicant.scores.planning}</td>
+              <td className="p-2 font-semibold text-indigo-900">{applicant.scores.planning}</td>
               <td className="p-2 text-gray-500">Measures capacity to prioritize tasks and organize complex workflows.</td>
             </tr>
           </tbody>
@@ -95,25 +96,27 @@ export default function PrintPreview({ applicant }: PrintPreviewProps) {
       </div>
 
       {/* Section 2: 16PF Profile & Personality */}
-      <div className="mb-6">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-900 border-b border-indigo-100 pb-1.5 mb-3 flex items-center gap-2">
-          <Award className="h-4 w-4 text-indigo-600" />
-          2. Personality Profile (16PF Index)
-        </h3>
-        <div className="border border-gray-200 rounded-lg p-3 flex justify-between items-center">
-          <div>
-            <span className="font-semibold text-gray-700">Personality Sten Score Rating:</span>
-            <p className="text-[10px] text-gray-500 mt-0.5">Determined via the 16 Personality Factors scale</p>
-          </div>
-          <div className="text-center bg-purple-50 px-4 py-2 border border-purple-200 rounded-md">
-            <span className="text-2xl font-black text-purple-700 block leading-none">{applicant.scores["16pf"]}</span>
-            <span className="text-[9px] text-purple-600 font-semibold tracking-wider block mt-0.5 uppercase">STEN INDEX</span>
+      {details?.detailed16pf && (
+        <div className="mb-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-900 border-b border-indigo-100 pb-1.5 mb-3 flex items-center gap-2">
+            <Award className="h-4 w-4 text-indigo-600" />
+            2. Personality Profile (16PF Dimensions)
+          </h3>
+          <div className="border border-gray-200 rounded-lg p-3 grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-gray-50/50">
+            {Object.entries(details.detailed16pf).map(([key, val]) => (
+              <div key={key} className="border border-gray-150 rounded p-2 bg-white shadow-2xs">
+                <span className="text-gray-400 uppercase font-bold block text-[7px] tracking-wider leading-none mb-1">
+                  {key.replace(/([A-Z])/g, ' $1')}
+                </span>
+                <span className="font-bold text-gray-800 text-xs">{val}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Section 3: Supervisory Leadership Assessments (if applicable) */}
-      {applicant.metadata.supervisoryTest && applicant.scores.supervisory && (
+      {applicant.metadata.supervisoryTest && details?.supervisory && (
         <div className="mb-6">
           <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-900 border-b border-indigo-100 pb-1.5 mb-3 flex items-center gap-2">
             <Award className="h-4 w-4 text-indigo-600" />
@@ -130,23 +133,23 @@ export default function PrintPreview({ applicant }: PrintPreviewProps) {
             </thead>
             <tbody>
               <tr className="border-b border-gray-200">
-                <td className="p-2 font-medium bg-gray-50/50">Management Capability</td>
-                <td className="p-2 font-semibold">{applicant.scores.supervisory.management}</td>
-                <td className="p-2 font-medium bg-gray-50/50">Supervision Skill</td>
-                <td className="p-2 font-semibold">{applicant.scores.supervisory.supervision}</td>
+                <td className="p-2 font-medium bg-gray-50/50">Management Logic</td>
+                <td className="p-2 font-semibold text-gray-800">{details.supervisory.management}</td>
+                <td className="p-2 font-medium bg-gray-50/50">Supervision Quality</td>
+                <td className="p-2 font-semibold text-gray-800">{details.supervisory.supervision}</td>
               </tr>
               <tr className="border-b border-gray-200">
                 <td className="p-2 font-medium bg-gray-50/50">Employee Relationship</td>
-                <td className="p-2 font-semibold">{applicant.scores.supervisory.employee}</td>
+                <td className="p-2 font-semibold text-gray-800">{details.supervisory.employeeRelations}</td>
                 <td className="p-2 font-medium bg-gray-50/50">Human Relationship</td>
-                <td className="p-2 font-semibold">{applicant.scores.supervisory.humanRels}</td>
+                <td className="p-2 font-semibold text-gray-800">{details.supervisory.humanRelationsPractices}</td>
               </tr>
               <tr>
                 <td colSpan={2} className="p-2 font-semibold text-indigo-900">
                   Total Leadership Composite Evaluation:
                 </td>
                 <td colSpan={2} className="p-2 font-bold text-indigo-600 text-sm text-right">
-                  {applicant.scores.supervisory.totalEvaluation}
+                  {applicant.scores.supervisoryTotalEvaluation}
                 </td>
               </tr>
             </tbody>
@@ -161,7 +164,7 @@ export default function PrintPreview({ applicant }: PrintPreviewProps) {
           {applicant.metadata.supervisoryTest ? "4" : "3"}. Psychological & Behavioral Assessment Narrative
         </h3>
         <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 text-gray-800 leading-relaxed text-[11px] whitespace-pre-wrap">
-          {applicant.psychometric ||
+          {details?.mentalAbility ||
             "No psychometric summary generated yet. Complete the AI-Assessed summary in the HR Dashboard."}
         </div>
       </div>

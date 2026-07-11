@@ -1,19 +1,74 @@
-export interface ApplicantFinalResult {
+export const classifications = [
+  'Low',
+  'Below Average',
+  'Low Average',
+  'Average',
+  'High Average',
+  'Above Average',
+  'Superior'
+] as const;
+
+export type Classification = typeof classifications[number];
+
+// Shared structures
+export interface SharedMetadata {
+  timestamp: string;
+  supervisoryTest: boolean; // Yes | No
+  emailAddress: string;
+  fullName: string;
+}
+
+export interface SharedIntent {
+  positionAppliedFor: string;
+  date: string;
+}
+
+// 1. MOCK DATASET TYPE ONE: Optimized for the main Dashboard Table View
+export interface ApplicantSummary {
   id: string;
-  metadata: {
-    timestamp: string;
-    supervisoryTest: boolean;
-    emailAddress: string;
-    fullName: string;
-  };
-  intent: {
-    positionAppliedFor: string;
-    date: string;
-  };
+  metadata: SharedMetadata;
+  intent: SharedIntent;
   scores: {
-    cfit: string;
-    comprehension: string;
-    planning: string;
+    cfit: Classification;
+    comprehension: Classification;
+    planning: Classification;
+    supervisoryTotalEvaluation: Classification;
+  };
+}
+
+// 2. MOCK DATASET TYPE TWO: Optimized for the Slide-out Profile Modal
+export interface ApplicantDetail {
+  id: string; // Matches the summary ID perfectly
+  detailed16pf: {
+    emotionalStability: Classification;
+    senseOfResponsibility: Classification;
+    conscientiousness: Classification;
+    assertiveness: Classification;
+    confidence: Classification;
+    flexibility: Classification;
+    openMindedness: Classification;
+    selfReliance: Classification;
+    sociability: Classification;
+    trustAcceptance: Classification;
+    objectivity: Classification;
+    optimismLiveliness: Classification;
+  };
+  supervisory: {
+    management: Classification;
+    supervision: Classification;
+    employeeRelations: Classification;
+    humanRelationsPractices: Classification;
+  };
+  mentalAbility: string; // Truncated or full overview text (ai generated)
+  supervisoryIndexesAI: {
+    index1Assessment: string; // Long form AI text block
+    index2Assessment: string; // Long form AI text block
+  };
+}
+
+// Compatibility interface for AnalyticsTab.tsx, which we must not modify
+export interface ApplicantFinalResult extends ApplicantSummary {
+  scores: ApplicantSummary['scores'] & {
     "16pf": string;
     supervisory?: {
       management: string;
@@ -24,36 +79,4 @@ export interface ApplicantFinalResult {
     };
   };
   psychometric: string;
-}
-
-export interface ApplicantRawScore {
-  id: string;
-  metadata: {
-    timestamp: string;
-    supervisoryTest: boolean;
-    emailAddress: string;
-    fullName: string;
-  };
-  intent: {
-    positionAppliedFor: string;
-    date: string;
-  };
-  scores: {
-    cfit: {
-      test1: number;
-      test2: number;
-      test3: number;
-      test4: number;
-    };
-    comprehension: number;
-    planning: number;
-    "16pf": number;
-    supervisory?: {
-      management: number;
-      supervision: number;
-      employee: number;
-      humanRels: number;
-      scores: number; // float
-    };
-  };
 }
