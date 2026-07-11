@@ -207,7 +207,7 @@ export default function DashboardTab({
                       </td>
 
                       {/* Full Name */}
-                      <td className="p-4 w-40 min-w-[160px] whitespace-nowrap font-bold text-slate-900 dark:text-slate-150">
+                      <td className="p-4 w-40 min-w-[160px] whitespace-nowrap text-slate-900 dark:text-slate-400">
                         {app.metadata.fullName}
                       </td>
 
@@ -217,7 +217,7 @@ export default function DashboardTab({
                       </td>
 
                       {/* Position */}
-                      <td className="p-4 w-56 min-w-[220px] whitespace-nowrap font-medium text-slate-700 dark:text-slate-350">
+                      <td className="p-4 w-56 min-w-[220px] whitespace-nowrap text-slate-700 dark:text-slate-400">
                         {app.intent.positionAppliedFor}
                       </td>
 
@@ -233,17 +233,17 @@ export default function DashboardTab({
                       </td>
 
                       {/* CFIT */}
-                      <td className="p-4 w-24 min-w-[90px] whitespace-nowrap font-bold text-slate-800 dark:text-slate-200">
+                      <td className="p-4 w-24 min-w-[90px] whitespace-nowrap text-slate-800 dark:text-slate-400">
                         {app.scores.cfit}
                       </td>
 
                       {/* Comprehension */}
-                      <td className="p-4 w-32 min-w-[130px] whitespace-nowrap text-slate-750 dark:text-slate-300 font-semibold">
+                      <td className="p-4 w-32 min-w-[130px] whitespace-nowrap text-slate-750 dark:text-slate-400">
                         {app.scores.comprehension}
                       </td>
 
                       {/* Planning */}
-                      <td className="p-4 w-32 min-w-[130px] whitespace-nowrap text-slate-700 dark:text-slate-350">
+                      <td className="p-4 w-32 min-w-[130px] whitespace-nowrap text-slate-700 dark:text-slate-400">
                         {app.scores.planning}
                       </td>
 

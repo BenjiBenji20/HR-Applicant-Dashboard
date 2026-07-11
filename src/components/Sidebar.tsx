@@ -47,11 +47,8 @@ export default function Sidebar({
         }`}
       >
         <div className="flex flex-col justify-between h-full p-4">
-          <div className="space-y-6">
+          <div className="space-y-3">
             <div className="flex items-center justify-between px-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Navigation
-              </span>
               <button
                 onClick={() => setIsOpen(false)}
                 className="rounded-lg p-1 hover:bg-slate-50 dark:hover:bg-slate-900 md:hidden text-slate-400 dark:text-slate-500"
@@ -99,11 +96,11 @@ export default function Sidebar({
             <div className="flex items-center gap-2 px-2 text-slate-400 dark:text-slate-500">
               <ClipboardCheck className="h-4 w-4 shrink-0 text-indigo-500" />
               <span className="text-[10px] font-mono tracking-wider uppercase font-semibold">
-                ISO-Psych Standards
+                HRD | Continental Sales Inc.
               </span>
             </div>
             <p className="mt-1.5 px-2 text-[10px] text-slate-400 dark:text-slate-600 font-medium">
-              Approved psychometric reporting engine. Version 1.4.0.
+              Psychometric reporting. July 2026.
             </p>
           </div>
         </div>
