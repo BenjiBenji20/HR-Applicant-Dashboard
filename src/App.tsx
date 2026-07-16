@@ -6,6 +6,8 @@ import AnalyticsTab from "./components/AnalyticsTab";
 import RawScoreModal from "./components/RawScoreModal";
 import AIPsychometricModal from "./components/AIPsychometricModal";
 import PrintPreview from "./components/PrintPreview";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
 import { initialSummaryResults, initialDetailedProfiles } from "./data/mockData";
 import { ApplicantSummary, ApplicantDetail, ApplicantFinalResult } from "./types";
 
@@ -14,12 +16,12 @@ export default function App() {
     const saved = localStorage.getItem("darkMode");
     return saved ? saved === "true" : false;
   });
-  
+
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
     const saved = localStorage.getItem("sidebarOpen");
     return saved ? saved === "true" : true;
   });
-  
+
   const [activeTab, setActiveTab] = useState<"dashboard" | "analytics">("dashboard");
 
   // Load summary results from localStorage or mockData
@@ -103,23 +105,70 @@ export default function App() {
   };
 
   const handleDownloadRows = (ids: string[]) => {
-    const selectedSummary = summaryResults.filter((app) => ids.includes(app.id));
-    const selectedDetailed = ids.map(id => detailedProfiles[id]).filter(Boolean);
-    const downloadData = {
-      summaries: selectedSummary,
-      details: selectedDetailed
-    };
-    const blob = new Blob([JSON.stringify(downloadData, null, 2)], {
-      type: "application/json",
+    const id = ids[0];
+    if (!id) return;
+    const applicant = summaryResults.find((app) => app.id === id);
+    if (!applicant) return;
+
+    setPrintingApplicant(applicant);
+
+    // Wait two frames for React to commit + paint the new applicant before capturing.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(async () => {
+        const element = document.getElementById("print-area");
+        if (!element) {
+          setPrintingApplicant(null);
+          return;
+        }
+
+        try {
+          // html2canvas-pro natively parses oklch/oklab/lch/lab/color()/color-mix() —
+          // no onclone color-scrubbing hacks needed at all.
+          const canvas = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+          });
+
+          const imgData = canvas.toDataURL("image/jpeg", 0.98);
+          const pdf = new jsPDF({ unit: "in", format: "letter", orientation: "portrait" });
+
+          const margin = 0.4;
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const usableWidth = pageWidth - margin * 2;
+          const usableHeight = pageHeight - margin * 2;
+
+          const imgProps = pdf.getImageProperties(imgData);
+          const imgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+          let heightLeft = imgHeight;
+          let position = margin;
+
+          pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeight);
+          heightLeft -= usableHeight;
+
+          // Multi-page support: keep adding pages, shifting the image up each time,
+          // for content taller than one page.
+          while (heightLeft > 0) {
+            position = margin - (imgHeight - heightLeft);
+            pdf.addPage();
+            pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeight);
+            heightLeft -= usableHeight;
+          }
+
+          pdf.save(
+            `HR_Assessment_${applicant.metadata.fullName.replace(/\s+/g, "_")}_${new Date()
+              .toISOString()
+              .slice(0, 10)}.pdf`
+          );
+        } catch (err) {
+          console.error("PDF generation error:", err);
+        } finally {
+          setPrintingApplicant(null);
+        }
+      });
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `HR_Assessment_Selected_Applicants_${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   const handleOpenRawScores = (id: string) => {
@@ -148,16 +197,17 @@ export default function App() {
 
   const handlePrintApplicant = (applicant: ApplicantSummary) => {
     setPrintingApplicant(applicant);
-    // Give state a short delay to render before firing native browser print
-    setTimeout(() => {
-      window.print();
-    }, 150);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print();
+      });
+    });
   };
 
   // Map the new schemas to ApplicantFinalResult compatibility type for the unmodified AnalyticsTab
   const analyticsResults = summaryResults.map((app) => {
     const detail = detailedProfiles[app.id];
-    
+
     // Map classification rating to a numeric-like Sten string that AnalyticsTab parses:
     // AnalyticsTab: app.scores["16pf"].match(/\d+/)?.[0] || "5"
     const mapToSten = (rating?: string) => {
@@ -171,9 +221,9 @@ export default function App() {
       if (r === "below average") return "Sten 2 (Below Average)";
       return "Sten 1 (Low)";
     };
-    
+
     const pfStenString = mapToSten(detail?.detailed16pf?.emotionalStability);
-    
+
     return {
       ...app,
       scores: {
@@ -193,16 +243,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F1F5F9] text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
-      
+
       {/* Printable Area - Rendered outside main layout, visible only on @media print */}
-      <PrintPreview 
-        applicant={printingApplicant || (summaryResults.length > 0 ? summaryResults[0] : null)} 
-        details={printingApplicant ? (detailedProfiles[printingApplicant.id] || null) : (summaryResults.length > 0 ? (detailedProfiles[summaryResults[0].id] || null) : null)} 
+      <PrintPreview
+        applicant={printingApplicant || (summaryResults.length > 0 ? summaryResults[0] : null)}
+        details={printingApplicant ? (detailedProfiles[printingApplicant.id] || null) : (summaryResults.length > 0 ? (detailedProfiles[summaryResults[0].id] || null) : null)}
       />
 
       {/* Main App Canvas */}
       <div className="flex h-screen flex-col print:hidden">
-        
+
         {/* Sticky Top Header */}
         <Header
           darkMode={darkMode}
@@ -210,7 +260,7 @@ export default function App() {
         />
 
         <div className="flex flex-1 overflow-hidden">
-          
+
           {/* Collapsible Sidebar */}
           <Sidebar
             isOpen={sidebarOpen}

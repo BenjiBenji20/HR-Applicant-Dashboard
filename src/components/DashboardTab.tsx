@@ -31,7 +31,7 @@ export default function DashboardTab({
 }: DashboardTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTrack, setFilterTrack] = useState<"all" | "supervisory" | "standard">("all");
-  
+
   // Delete warning states
   const [isDeleteWarningOpen, setIsDeleteWarningOpen] = useState(false);
   const [idsToDelete, setIdsToDelete] = useState<string[]>([]);
@@ -111,7 +111,7 @@ export default function DashboardTab({
             />
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
           </div>
-          
+
           <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 px-3 py-2 rounded-lg text-xs">
             <Filter className="h-3.5 w-3.5 text-slate-400" />
             <select
@@ -182,7 +182,7 @@ export default function DashboardTab({
                           <button
                             onClick={() => onDownloadRows([app.id])}
                             className="p-1.5 text-slate-500 bg-slate-100 hover:bg-slate-200 dark:text-slate-400 dark:bg-slate-900 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-                            title="Download JSON"
+                            title="Download PDF"
                           >
                             <Download className="h-4 w-4 cursor-pointer" />
                           </button>
@@ -223,11 +223,10 @@ export default function DashboardTab({
 
                       {/* Supervisory */}
                       <td className="p-4 w-28 min-w-[110px] whitespace-nowrap">
-                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold ${
-                          app.metadata.supervisoryTest 
-                            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/20 dark:text-indigo-400" 
+                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold ${app.metadata.supervisoryTest
+                            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/20 dark:text-indigo-400"
                             : "bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400"
-                        }`}>
+                          }`}>
                           {app.metadata.supervisoryTest ? "Yes" : "No"}
                         </span>
                       </td>
