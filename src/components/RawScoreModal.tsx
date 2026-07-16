@@ -36,8 +36,9 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
               <tr className="bg-slate-100/70 dark:bg-slate-900 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 <th className="p-3 text-left font-semibold">Test No.</th>
                 <th className="p-3 text-left font-semibold">Consumed Time</th>
-                <th className="p-3 text-center font-semibold">Item</th>
                 <th className="p-3 text-right font-semibold">Time Limit</th>
+                <th className="p-3 text-center font-semibold">Test Answered</th>
+                <th className="p-3 text-center font-semibold">Item</th>
               </tr>
             </thead>
             <tbody className="text-slate-700 dark:text-slate-300 font-medium">
@@ -45,8 +46,9 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
                 <tr key={key} className="hover:bg-slate-100/30 dark:hover:bg-slate-900/10">
                   <td className="p-3 text-left capitalize">{key.replace("test", "Test ")}</td>
                   <td className="p-3 text-left font-mono font-semibold text-slate-900 dark:text-slate-100">{val.consumedTime}</td>
-                  <td className="p-3 text-center font-mono">{val.testItem}</td>
                   <td className="p-3 text-right font-mono">{val.timeFrame}</td>
+                  <td className="p-3 text-center font-mono">{val.testAnswered ?? "-"}</td>
+                  <td className="p-3 text-center font-mono">{val.testItem}</td>
                 </tr>
               ))}
             </tbody>

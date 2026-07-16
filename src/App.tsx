@@ -48,9 +48,17 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         const firstKey = Object.keys(parsed)[0];
-        if (firstKey && !parsed[firstKey].allTestTimeConsumed) {
-          localStorage.removeItem("detailedProfiles");
-          return initialDetailedProfiles;
+        if (firstKey) {
+          const profile = parsed[firstKey];
+          const timeConsumed = profile.allTestTimeConsumed;
+          const hasTestAnswered = timeConsumed && (
+            (timeConsumed.cfitTestTime?.test1 && 'testAnswered' in timeConsumed.cfitTestTime.test1) ||
+            (timeConsumed.jcTestTime?.test1 && 'testAnswered' in timeConsumed.jcTestTime.test1)
+          );
+          if (!timeConsumed || !hasTestAnswered) {
+            localStorage.removeItem("detailedProfiles");
+            return initialDetailedProfiles;
+          }
         }
         return parsed;
       } catch (e) {

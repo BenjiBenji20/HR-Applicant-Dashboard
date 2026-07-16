@@ -86,8 +86,9 @@ export interface ApplicantFinalResult extends ApplicantSummary {
 // time consumed types
 export interface TestTime {
   consumedTime: string; // 1m 32s
-  testItem: number;
   timeFrame: string; // 4 mins
+  testAnswered: number;
+  testItem: number;
 }
 
 export interface AllTestTimeConsumed {
