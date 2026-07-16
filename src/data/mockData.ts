@@ -1,4 +1,5 @@
 import { ApplicantSummary, ApplicantDetail, classifications } from "../types/types";
+import { BarChart3, FileText, CheckCircle2, TrendingDown, Users } from "lucide-react";
 
 export const initialSummaryResults: ApplicantSummary[] = [
   {
@@ -143,5 +144,44 @@ export const initialDetailedProfiles: Record<string, ApplicantDetail> = {
         test1: { consumedTime: "12m 45s", timeFrame: "25 mins", testAnswered: 1, testItem: 60 }
       }
     }
+  }
+};
+
+
+export const cardConfigs = {
+  pos: {
+    title: "Applications by Position",
+    description: "Distribution of candidate applications across vacancies",
+    explanation: "This graph represents applicant interest across job vacancies. Higher bars show which positions attract the most candidates, assisting recruiters in planning resource allocation.",
+    icon: BarChart3,
+    color: "text-indigo-500"
+  },
+  outcome: {
+    title: "Application Outcome",
+    description: "Candidate pass rate based on composite cognitive score ratings",
+    explanation: "This donut chart visualizes candidate qualifications. 'Successful' candidates match high-average or superior benchmarks, 'Failed' indicates low test matching, and 'Pending' shows middle-tier profiles.",
+    icon: FileText,
+    color: "text-emerald-500"
+  },
+  comp: {
+    title: "Test Completion",
+    description: "Comparison between completed vs incomplete test profiles",
+    explanation: "This card shows candidate test completion status. High rates of incomplete test profiles might indicate lengthy test constraints or scheduling conflicts.",
+    icon: CheckCircle2,
+    color: "text-indigo-500"
+  },
+  interview: {
+    title: "Interview & No-Show",
+    description: "Attendance and interview drop-out ratios grouped by position",
+    explanation: "This comparison grouped bar graph shows interviewed candidates versus no-shows side-by-side. High no-show ratios in certain roles indicate candidates dropped out of the pipeline.",
+    icon: TrendingDown,
+    color: "text-rose-500"
+  },
+  funnel: {
+    title: "Hiring Process",
+    description: "Sequential process yield drop-off from Application to Hire",
+    explanation: "The pipeline funnel shows candidate yield. It operates sequentially: candidate totals shrink from Applied, through testing and interviews, down to the final selection list.",
+    icon: Users,
+    color: "text-cyan-500"
   }
 };
