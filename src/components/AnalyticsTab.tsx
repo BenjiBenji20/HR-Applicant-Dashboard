@@ -515,7 +515,7 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
       case "pos":
         return (
           <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-900 text-xs font-sans">
-            <thead className="bg-slate-50 dark:bg-slate-910">
+            <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
                 <th className="px-3 py-2 text-left font-semibold text-slate-400 font-sans">Position Name</th>
                 <th className="px-3 py-2 text-right font-semibold text-slate-400 font-sans">Total Applied</th>
@@ -539,7 +539,7 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
       case "outcome":
         return (
           <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-900 text-xs font-sans">
-            <thead className="bg-slate-50 dark:bg-slate-905 font-sans">
+            <thead className="bg-slate-50 dark:bg-slate-900 font-sans">
               <tr>
                 <th className="px-3 py-2 text-left font-semibold text-slate-400 font-sans">Classification</th>
                 <th className="px-3 py-2 text-right font-semibold text-slate-400 font-sans">Count</th>
@@ -563,7 +563,7 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
       case "comp":
         return (
           <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-900 text-xs font-sans">
-            <thead className="bg-slate-50 dark:bg-slate-905 font-sans">
+            <thead className="bg-slate-50 dark:bg-slate-900 font-sans">
               <tr>
                 <th className="px-3 py-2 text-left font-semibold text-slate-400 font-sans">Status</th>
                 <th className="px-3 py-2 text-right font-semibold text-slate-400 font-sans">Total Count</th>
@@ -587,7 +587,7 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
       case "interview":
         return (
           <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-900 text-xs font-sans">
-            <thead className="bg-slate-50 dark:bg-slate-905 font-sans">
+            <thead className="bg-slate-50 dark:bg-slate-900 font-sans">
               <tr>
                 <th className="px-3 py-2 text-left font-semibold text-slate-400 font-sans">Position</th>
                 <th className="px-3 py-2 text-right font-semibold text-slate-400 font-sans">Interviewed</th>
@@ -614,7 +614,7 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
       case "funnel":
         return (
           <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-900 text-xs font-sans">
-            <thead className="bg-slate-50 dark:bg-slate-905 font-sans">
+            <thead className="bg-slate-50 dark:bg-slate-900 font-sans">
               <tr>
                 <th className="px-3 py-2 text-left font-semibold text-slate-400 font-sans">Stage</th>
                 <th className="px-3 py-2 text-right font-semibold text-slate-400 font-sans">Active Candidates</th>
@@ -963,7 +963,7 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
               {/* Modal Body */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 items-stretch font-sans">
                 {/* Visual Chart Panel (Left) */}
-                <div className="md:col-span-7 bg-slate-50 dark:bg-slate-900/40 rounded-xl p-4 flex items-center justify-center border border-slate-100 dark:border-slate-900/60 min-h-[300px]">
+                <div className={`${activeModalCard === "funnel" ? "md:col-span-5" : "md:col-span-7"} bg-slate-50 dark:bg-slate-900/40 rounded-xl p-4 flex items-center justify-center border border-slate-100 dark:border-slate-900/60 min-h-[300px]`}>
                   {activeModalCard === "funnel" ? (
                     <div className="w-full flex items-center justify-center">
                       {renderFunnelFlow(true)}
@@ -974,7 +974,7 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
                 </div>
 
                 {/* Info and Data Table Panel (Right) */}
-                <div className="md:col-span-5 flex flex-col justify-between space-y-4 font-sans">
+                <div className={`${activeModalCard === "funnel" ? "md:col-span-7" : "md:col-span-5"} flex flex-col justify-between space-y-4 font-sans`}>
                   <div className="space-y-3 font-sans">
                     <div>
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-sans">Analysis Insight</h4>
