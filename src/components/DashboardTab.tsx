@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -31,6 +31,14 @@ export default function DashboardTab({
 }: DashboardTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTrack, setFilterTrack] = useState<"all" | "supervisory" | "standard">("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Delete warning states
   const [isDeleteWarningOpen, setIsDeleteWarningOpen] = useState(false);
@@ -64,6 +72,65 @@ export default function DashboardTab({
     setIsDeleteWarningOpen(false);
     setIdsToDelete([]);
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        {/* Welcome Section Skeleton */}
+        <div className="mb-8 space-y-2.5">
+          <div className="h-7 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+          <div className="h-4 w-72 bg-slate-100 dark:bg-slate-900 rounded-lg" />
+        </div>
+
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="h-3.5 w-24 bg-slate-100 dark:bg-slate-900 rounded" />
+            <div className="h-7 w-12 bg-slate-200 dark:bg-slate-800 rounded" />
+          </div>
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="h-3.5 w-28 bg-slate-100 dark:bg-slate-900 rounded" />
+            <div className="h-7 w-8 bg-slate-200 dark:bg-slate-800 rounded" />
+          </div>
+          <div className="bg-white dark:bg-slate-950 p-6 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="h-3.5 w-24 bg-slate-100 dark:bg-slate-900 rounded" />
+            <div className="h-7 w-8 bg-slate-200 dark:bg-slate-800 rounded" />
+          </div>
+        </div>
+
+        {/* Toolbar Skeleton */}
+        <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-4">
+          <div className="h-4 w-36 bg-slate-200 dark:bg-slate-800 rounded" />
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-48 sm:w-64 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+            <div className="h-9 w-28 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+          </div>
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-[400px]">
+          <div className="h-12 bg-slate-50 dark:bg-slate-900/60 flex items-center px-6 border-b border-slate-200 dark:border-slate-800 gap-6">
+            <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded shrink-0" />
+            <div className="h-4 w-12 bg-slate-200 dark:bg-slate-800 rounded shrink-0" />
+            <div className="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded shrink-0" />
+            <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded shrink-0 flex-1" />
+            <div className="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded-lg shrink-0 w-44" />
+          </div>
+          <div className="flex-1 divide-y divide-slate-100 dark:divide-slate-900 px-6 py-2 space-y-4">
+            {[1, 2, 3, 4, 5].map((row) => (
+              <div key={row} className="flex items-center gap-6 pt-4">
+                <div className="h-7 w-28 bg-slate-100 dark:bg-slate-900 rounded-lg shrink-0" />
+                <div className="h-3 w-12 bg-slate-100 dark:bg-slate-900 rounded shrink-0" />
+                <div className="h-3 w-20 bg-slate-100 dark:bg-slate-900 rounded shrink-0" />
+                <div className="h-3 w-32 bg-slate-100 dark:bg-slate-900 rounded shrink-0 flex-1" />
+                <div className="h-3 w-40 bg-slate-100 dark:bg-slate-900 rounded-lg shrink-0 w-44" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
