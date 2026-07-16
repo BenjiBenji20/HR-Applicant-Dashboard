@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Sparkles, AlertCircle, Save, RotateCw } from "lucide-react";
-import { ApplicantSummary, ApplicantDetail } from "../types";
+import { ApplicantSummary, ApplicantDetail } from "../types/types";
 
 interface AIPsychometricModalProps {
   applicant: ApplicantSummary;
@@ -106,7 +106,7 @@ export default function AIPsychometricModal({
                 Candidate Core Scores
               </span>
             </div>
-            
+
             <table className="w-full text-left border-collapse text-xs">
               <tbody>
                 <tr className="border-b border-slate-100 dark:border-slate-800/50">

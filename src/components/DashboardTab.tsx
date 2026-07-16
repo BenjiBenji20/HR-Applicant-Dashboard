@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   Database
 } from "lucide-react";
-import { ApplicantSummary } from "../types";
+import { ApplicantSummary } from "../types/types";
 
 interface DashboardTabProps {
   finalResults: ApplicantSummary[];
@@ -224,8 +224,8 @@ export default function DashboardTab({
                       {/* Supervisory */}
                       <td className="p-4 w-28 min-w-[110px] whitespace-nowrap">
                         <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold ${app.metadata.supervisoryTest
-                            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/20 dark:text-indigo-400"
-                            : "bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400"
+                          ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/20 dark:text-indigo-400"
+                          : "bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400"
                           }`}>
                           {app.metadata.supervisoryTest ? "Yes" : "No"}
                         </span>

@@ -9,7 +9,7 @@ import PrintPreview from "./components/PrintPreview";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { initialSummaryResults, initialDetailedProfiles } from "./data/mockData";
-import { ApplicantSummary, ApplicantDetail, ApplicantFinalResult } from "./types";
+import { ApplicantSummary, ApplicantDetail, ApplicantFinalResult } from "./types/types";
 
 export default function App() {
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -22,7 +22,37 @@ export default function App() {
     return saved ? saved === "true" : true;
   });
 
-  const [activeTab, setActiveTab] = useState<"dashboard" | "analytics">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "analytics">(() => {
+    const path = window.location.pathname;
+    if (path === "/analytics") return "analytics";
+    return "dashboard";
+  });
+
+  const handleTabChange = (tab: "dashboard" | "analytics") => {
+    setActiveTab(tab);
+    window.history.pushState(null, "", "/" + tab);
+  };
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path !== "/dashboard" && path !== "/analytics") {
+      window.history.replaceState(null, "", "/dashboard");
+      setActiveTab("dashboard");
+    }
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === "/analytics") {
+        setActiveTab("analytics");
+      } else {
+        setActiveTab("dashboard");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   // Load summary results from localStorage or mockData
   const [summaryResults, setSummaryResults] = useState<ApplicantSummary[]>(() => {
@@ -266,7 +296,7 @@ export default function App() {
             isOpen={sidebarOpen}
             setIsOpen={setSidebarOpen}
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleTabChange}
             darkMode={darkMode}
             setDarkMode={setDarkMode}
           />

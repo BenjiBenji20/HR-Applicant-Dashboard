@@ -1,4 +1,4 @@
-import { ApplicantSummary, ApplicantDetail, classifications } from "../types";
+import { ApplicantSummary, ApplicantDetail, classifications } from "../types/types";
 
 export const initialSummaryResults: ApplicantSummary[] = [
   {
@@ -71,25 +71,25 @@ export const initialDetailedProfiles: Record<string, ApplicantDetail> = {
     },
     allTestTimeConsumed: {
       cfitTestTime: {
-        test1: { consumedTime: "1m 32s", timeFrame: "3 mins", testAnswered: 1, testItem: 13  },
-        test2: { consumedTime: "2m 15s", timeFrame: "4 mins", testAnswered: 1, testItem: 14  },
-        test3: { consumedTime: "1m 55s", timeFrame: "4 mins", testAnswered: 1, testItem: 13  },
-        test4: { consumedTime: "2m 05s", timeFrame: "4 mins", testAnswered: 1, testItem: 10  }
+        test1: { consumedTime: "1m 32s", timeFrame: "3 mins", testAnswered: 1, testItem: 13 },
+        test2: { consumedTime: "2m 15s", timeFrame: "4 mins", testAnswered: 1, testItem: 14 },
+        test3: { consumedTime: "1m 55s", timeFrame: "4 mins", testAnswered: 1, testItem: 13 },
+        test4: { consumedTime: "2m 05s", timeFrame: "4 mins", testAnswered: 1, testItem: 10 }
       },
       jcTestTime: {
-        test1: { consumedTime: "8m 45s", timeFrame: "15 mins", testAnswered: 1, testItem: 30  }
+        test1: { consumedTime: "8m 45s", timeFrame: "15 mins", testAnswered: 1, testItem: 30 }
       },
       fitPlanningTestTime: {
-        test1: { consumedTime: "12m 10s", timeFrame: "20 mins", testAnswered: 1, testItem: 40  }
+        test1: { consumedTime: "12m 10s", timeFrame: "20 mins", testAnswered: 1, testItem: 40 }
       },
       "16pfTestTime": {
-        test1: { consumedTime: "4m 10s", timeFrame: "8 mins", testAnswered: 1, testItem: 45  },
-        test2: { consumedTime: "5m 25s", timeFrame: "8 mins", testAnswered: 1, testItem: 45  },
-        test3: { consumedTime: "6m 12s", timeFrame: "8 mins", testAnswered: 1, testItem: 45  },
-        test4: { consumedTime: "4m 50s", timeFrame: "10 mins", testAnswered: 1, testItem: 50  }
+        test1: { consumedTime: "4m 10s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 },
+        test2: { consumedTime: "5m 25s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 },
+        test3: { consumedTime: "6m 12s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 },
+        test4: { consumedTime: "4m 50s", timeFrame: "10 mins", testAnswered: 1, testItem: 50 }
       },
       supervTestTime: {
-        test1: { consumedTime: "14m 15s", timeFrame: "25 mins", testAnswered: 1, testItem: 60  }
+        test1: { consumedTime: "14m 15s", timeFrame: "25 mins", testAnswered: 1, testItem: 60 }
       }
     }
   },

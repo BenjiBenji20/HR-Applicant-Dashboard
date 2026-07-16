@@ -1,5 +1,5 @@
 import React from "react";
-import { ApplicantSummary, ApplicantDetail } from "../types";
+import { ApplicantSummary, ApplicantDetail } from "../types/types";
 import { Briefcase, Calendar, Mail, FileText, Award, User, Layers } from "lucide-react";
 
 interface PrintPreviewProps {

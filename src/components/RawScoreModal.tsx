@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { X, Cpu, BarChart3, AlertCircle, Award, Brain, FileText, Timer } from "lucide-react";
-import { ApplicantSummary, ApplicantDetail } from "../types";
+import { ApplicantSummary, ApplicantDetail } from "../types/types";
 
 interface RawScoreModalProps {
   summary: ApplicantSummary | null;
