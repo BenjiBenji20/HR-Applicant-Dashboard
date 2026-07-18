@@ -529,7 +529,11 @@
 
       switch (q.type) {
         case "TEXT":
-          html += '<input type="text" data-index="' + q.index + '" class="quiz-input" autocomplete="off">';
+          var maxLenAttr = (q.id === "custom_education") ? ' maxlength="50"' : '';
+          html += '<input type="text" data-index="' + q.index + '" class="quiz-input" autocomplete="off"' + maxLenAttr + '>';
+          break;
+        case "NUMBER":
+          html += '<input type="number" min="1" data-index="' + q.index + '" class="quiz-input" autocomplete="off">';
           break;
         case "DATE":
           html += '<input type="date" data-index="' + q.index + '" class="quiz-input">';
@@ -598,6 +602,28 @@
     }
   }
 
+  function getValidationError(q, val) {
+    var isEmpty = (val === undefined || val === null || String(val).trim() === "");
+    if (isEmpty) {
+      if (q.required) {
+        return "This field is required.";
+      }
+      return null;
+    }
+    if (q.id === "custom_age") {
+      var num = Number(val);
+      if (isNaN(num) || num < 1) {
+        return "Age must be a number not less than 1.";
+      }
+    }
+    if (q.id === "custom_education") {
+      if (String(val).length > 50) {
+        return "Education must not exceed 50 characters.";
+      }
+    }
+    return null;
+  }
+
   function validateSingleInput(target) {
     if (!target) return;
     if (target.id === "responderEmail") {
@@ -660,13 +686,19 @@
             }
           }
         } else {
-          var hasVal = false;
-          if (val !== undefined && val !== null && String(val).trim() !== "") {
-            hasVal = true;
-          }
-          if (hasVal) {
+          var customErr = getValidationError(q, val);
+          if (!customErr) {
             if (card) card.classList.remove("has-error");
             if (errEl) errEl.style.display = "none";
+          } else {
+            var isEmpty = (val === undefined || val === null || String(val).trim() === "");
+            if (card && (card.classList.contains("has-error") || !isEmpty)) {
+              card.classList.add("has-error");
+              if (errEl) {
+                errEl.textContent = customErr;
+                errEl.style.display = "block";
+              }
+            }
           }
         }
       }
@@ -727,14 +759,11 @@
           if (errEl) errEl.style.display = "none";
         }
       } else {
-        var hasAnswer = false;
-        if (v !== undefined && v !== null && String(v).trim() !== "") {
-          hasAnswer = true;
-        }
-        if (!hasAnswer) {
+        var customErr = getValidationError(q, v);
+        if (customErr) {
           if (card) card.classList.add("has-error");
           if (errEl) {
-            errEl.textContent = "This field is required.";
+            errEl.textContent = customErr;
             errEl.style.display = "block";
           }
           isValid = false;
@@ -768,6 +797,7 @@
 
         switch (q.type) {
           case "TEXT":
+          case "NUMBER":
           case "PARAGRAPH_TEXT":
           case "DATE":
           case "TIME": {
@@ -899,6 +929,7 @@
 
         switch (q.type) {
           case "TEXT":
+          case "NUMBER":
           case "PARAGRAPH_TEXT":
           case "DATE":
           case "TIME": {

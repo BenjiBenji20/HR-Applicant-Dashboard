@@ -274,6 +274,59 @@ function getFormQuestions(setNum) {
   }
 
   // Re-adjust indexes to be sequential for UI rendering (IDs like card_X)
+  var nameIdx = -1;
+  for (var k = 0; k < finalQuestions.length; k++) {
+    var title = finalQuestions[k].title;
+    if (title) {
+      var cleanTitle = title.trim().toLowerCase().replace(/[:*]/g, "").trim();
+      if (cleanTitle === "full name" || cleanTitle === "name" || cleanTitle === "candidate name" || cleanTitle === "complete name" || cleanTitle.indexOf("full name") !== -1 || (cleanTitle.indexOf("name") !== -1 && k < 3)) {
+        nameIdx = k;
+        break;
+      }
+    }
+  }
+
+  if (nameIdx !== -1) {
+    var customQuestions = [
+      {
+        id: "custom_age",
+        title: "Age",
+        type: "NUMBER",
+        helpText: "",
+        choices: [],
+        isQuestion: true,
+        required: true,
+        sectionNumber: null,
+        questionImageData: null
+      },
+      {
+        id: "custom_education",
+        title: "Education",
+        type: "TEXT",
+        helpText: "",
+        choices: [],
+        isQuestion: true,
+        required: true,
+        sectionNumber: null,
+        questionImageData: null
+      },
+      {
+        id: "custom_contact",
+        title: "Contact Number",
+        type: "TEXT",
+        helpText: "",
+        choices: [],
+        isQuestion: true,
+        required: true,
+        sectionNumber: null,
+        questionImageData: null
+      }
+    ];
+    for (var m = 0; m < customQuestions.length; m++) {
+      finalQuestions.splice(nameIdx + 1 + m, 0, customQuestions[m]);
+    }
+  }
+
   finalQuestions.forEach(function (q, idx) {
     q.index = idx;
   });
