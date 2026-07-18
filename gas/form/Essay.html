@@ -1,0 +1,64 @@
+<script>
+  /**
+   * Custom renderer for the Essay section questions.
+   * Renders the paragraph input textareas and sets up validation and autosave.
+   */
+  function renderEssayPage(formPackage) {
+    var container = document.getElementById("dynamic-questions-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    var mainTitle = document.getElementById("form-main-title");
+    var mainDesc = document.getElementById("form-main-desc");
+    if (mainTitle) mainTitle.textContent = formPackage.formTitle || "Essay Section";
+    if (mainDesc) mainDesc.textContent = formPackage.formDescription || "Please complete the essay questions below.";
+
+    // Hide the email field card since it's not the first set
+    var emailCard = document.getElementById("email-field-card");
+    if (emailCard) emailCard.style.display = "none";
+
+    var questions = formPackage.questions || [];
+    questions.forEach(function (q) {
+      if (q.type === "PAGE_BREAK") {
+        var card = document.createElement("div");
+        card.className = "section-break-card";
+        card.innerHTML =
+          '<div class="section-title">' + escHtml(q.title) + "</div>" +
+          (q.helpText ? '<div class="section-desc">' + escHtml(q.helpText) + "</div>" : "");
+        container.appendChild(card);
+        return;
+      }
+
+      if (q.type === "SECTION_HEADER") {
+        var card = document.createElement("div");
+        card.className = "section-header-card";
+        card.innerHTML =
+          '<div class="header-card-title">' + escHtml(q.title) + "</div>" +
+          (q.helpText ? '<div class="header-card-desc">' + escHtml(q.helpText) + "</div>" : "");
+        container.appendChild(card);
+        return;
+      }
+
+      var card = document.createElement("div");
+      card.className = "quiz-card essay-card";
+      card.id = "card_" + q.index;
+
+      var ast = q.required ? '<span class="required-asterisk">*</span>' : "";
+      var html = '<div class="question-title">' + escHtml(q.title) + ast + "</div>";
+      if (q.helpText) {
+        html += '<div class="question-help">' + escHtml(q.helpText) + "</div>";
+      }
+
+      // Elegant, responsive textarea
+      html += '<textarea rows="6" data-index="' + q.index + '" class="quiz-input" placeholder="Type your answer here... / Isulat ang iyong sagot dito..." style="width: 100%; min-height: 120px; font-family: inherit; font-size: 14px; padding: 12px; border: 1.5px solid #dadce0; border-radius: 6px; resize: vertical; box-sizing: border-box;"></textarea>';
+      html += '<div class="field-error" id="error_' + q.index + '">This field is required. / Kailangan ang field na ito.</div>';
+
+      card.innerHTML = html;
+      container.appendChild(card);
+    });
+
+    // Restore any existing inputs and register event listeners
+    repopulateSavedAnswers();
+    attachInputListeners();
+  }
+</script>

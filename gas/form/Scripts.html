@@ -1,0 +1,1112 @@
+<script>
+  // ==============================================================================
+  // Form test flow:
+  // supervisory test:
+  // CFIT&J&C tests -> FIT_PLANNING&16PF test -> supervisory test -> success page
+  //
+  // none supervisory test:
+  // CFIT&J&C tests -> FIT_PLANNING&16PF test -> success page
+  // ==============================================================================
+
+
+  // -------------------------------------------------------
+  //  DEPLOYMENT CONFIGURATION FLAGS
+  // -------------------------------------------------------
+  var IS_SUPERVISORY = true; // Set true for supervisory mode, false for non-supervisory mode
+  var IS_DEV_MODE = true;    // Set true for 1min time limit, false for regular time limit
+
+  // ── Ordered list of test keys ────────────────────────────────
+  const ORDERED_KEYS = [
+    "CFIT&J&C_1",
+    "CFIT&J&C_2",
+    "CFIT&J&C_3",
+    "CFIT&J&C_4",
+    "CFIT&J&C_5",
+    "FIT_PLANNING&16PF_1",
+    "FIT_PLANNING&16PF_2",
+    "FIT_PLANNING&16PF_3",
+    "FIT_PLANNING&16PF_4"
+  ];
+  if (IS_SUPERVISORY) {
+    ORDERED_KEYS.push("SUPERVISORY_1");
+  }
+  ORDERED_KEYS.push("ESSAY");
+  ORDERED_KEYS.push("APPLICATION_UPLOAD");
+
+  // ── Time limits (seconds) ────────────────────────────────────
+  let TEST_LIMITS = {
+    // CFIT&J&C forms
+    "CFIT&J&C_1": 4 * 60,
+    "CFIT&J&C_2": 3 * 60,
+    "CFIT&J&C_3": 3 * 60,
+    "CFIT&J&C_4": 4 * 60,
+    "CFIT&J&C_5": 15 * 60,
+
+    // FIT_PLANNING&16PF forms
+    "FIT_PLANNING&16PF_1": 15 * 60,
+    "FIT_PLANNING&16PF_2": 30 * 60,
+    "FIT_PLANNING&16PF_3": 30 * 60,
+    "FIT_PLANNING&16PF_4": 15 * 60,
+
+    // SUPERVISORY form
+    "SUPERVISORY_1": 30 * 60,
+  };
+
+  if (IS_DEV_MODE) {
+    TEST_LIMITS = {
+      "CFIT&J&C_1": 1 * 60,
+      "CFIT&J&C_2": 1 * 60,
+      "CFIT&J&C_3": 1 * 60,
+      "CFIT&J&C_4": 1 * 60,
+      "CFIT&J&C_5": 1 * 60,
+      "FIT_PLANNING&16PF_1": 1 * 60,
+      "FIT_PLANNING&16PF_2": 1 * 60,
+      "FIT_PLANNING&16PF_3": 1 * 60,
+      "FIT_PLANNING&16PF_4": 1 * 60,
+      "SUPERVISORY_1": 1 * 60,
+    };
+  }
+
+  const TOTAL_SETS = ORDERED_KEYS.length;
+
+  function getFormKeyForSetKey(key) {
+    var idx = parseInt(key, 10) - 1;
+    if (idx >= 0 && idx < ORDERED_KEYS.length) {
+      return ORDERED_KEYS[idx];
+    }
+    return ORDERED_KEYS[0];
+  }
+
+  // ── Safely parse variables ─────────────────
+  const _RAW_SET = window.EXAM_CONFIG.currentSet;
+  const VALID_SETS = [];
+  for (var i = 1; i <= TOTAL_SETS; i++) {
+    VALID_SETS.push(String(i));
+  }
+  const CURRENT_SET = VALID_SETS.indexOf(_RAW_SET) !== -1 ? _RAW_SET : "1";
+  const BASE_WEBAPP_URL = window.EXAM_CONFIG.webAppUrl;
+
+  // Bump the key whenever the state schema changes (forces clean slate)
+  const STORAGE_KEY = "exam_state_v6";
+
+  function generateUUID() {
+    try {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+    } catch (e) { }
+    var d = new Date().getTime();
+    var d2 = (typeof performance !== 'undefined' && performance.now && (performance.now() * 1000)) || 0;
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = Math.random() * 16;
+      if (d > 0) {
+        r = (d + r) % 16 | 0;
+        d = Math.floor(d / 16);
+      } else {
+        r = (d2 + r) % 16 | 0;
+        d2 = Math.floor(d2 / 16);
+      }
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  // ── Module-level ──────────────────────────────────────────────
+  let countdownInterval = null;
+  let globalQuestions = [];
+  let appState = {};
+  let _lsAvailable = false; // set by initGlobalState
+
+  // ============================================================
+  //  LOCALSTORAGE WRAPPER  (graceful degradation)
+  // ============================================================
+  function _checkLS() {
+    try {
+      const k = "__exam_ls__";
+      localStorage.setItem(k, "1");
+      localStorage.removeItem(k);
+      return true;
+    } catch (_) { return false; }
+  }
+
+  function persistState() {
+    if (!_lsAvailable) return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
+    catch (e) { console.error("[Exam] persist failed:", e); }
+  }
+
+  function clearStorage() {
+    if (!_lsAvailable) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) { }
+  }
+
+  // ============================================================
+  //  STATE SCHEMA
+  // ============================================================
+  function buildFreshSetState(key) {
+    var formKey = getFormKeyForSetKey(key);
+    return {
+      remaining: (TEST_LIMITS[formKey] != null ? TEST_LIMITS[formKey] : 999999),
+      elapsed: 0,
+      unlocked: (key === "1"),
+      submitted: false,
+      answers: {}
+    };
+  }
+
+  function repairSetState(s, key, isFirst) {
+    var formKey = getFormKeyForSetKey(key);
+    if (typeof s.remaining !== "number" || !isFinite(s.remaining) || s.remaining < 0)
+      s.remaining = TEST_LIMITS[formKey] != null ? TEST_LIMITS[formKey] : 999999;
+    if (typeof s.elapsed !== "number" || !isFinite(s.elapsed) || s.elapsed < 0)
+      s.elapsed = 0;
+    if (typeof s.unlocked !== "boolean")
+      s.unlocked = isFirst;
+    if (typeof s.submitted !== "boolean")
+      s.submitted = false;
+    if (!s.answers || typeof s.answers !== "object" || Array.isArray(s.answers))
+      s.answers = {};
+  }
+
+  // ============================================================
+  //  INIT GLOBAL STATE
+  // ============================================================
+  function initGlobalState() {
+    _lsAvailable = _checkLS();
+
+    // --- Dynamic URL parameter reset handler (?clear=true)
+    try {
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("clear") === "true") {
+        if (_lsAvailable) {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+        var cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete("clear");
+        window.location.href = cleanUrl.toString();
+        return;
+      }
+    } catch (e) {
+      console.warn("[Exam] URL parameter clear failed:", e);
+    }
+
+    // --- Read from localStorage
+    var stateLoaded = false;
+    if (_lsAvailable) {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            // Reset state if mode has changed between Dev/Regular or Super/Standard
+            if (parsed.isDevMode === IS_DEV_MODE && parsed.IS_SUPERVISORY === IS_SUPERVISORY) {
+              appState = parsed;
+              stateLoaded = true;
+            } else {
+              console.warn("[Exam] Mode mismatch detected (dev/supervisory) - resetting storage.");
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[Exam] State read failed – hard reset:", e);
+      }
+    }
+
+    if (!stateLoaded) {
+      appState = {
+        isDevMode: IS_DEV_MODE,
+        IS_SUPERVISORY: IS_SUPERVISORY,
+        candidateId: generateUUID()
+      };
+      clearStorage();
+    }
+
+    // --- Guarantee candidateId exists
+    if (!appState.candidateId) {
+      appState.candidateId = generateUUID();
+    }
+    // Enforce current flags in active state
+    appState.isDevMode = IS_DEV_MODE;
+    appState.IS_SUPERVISORY = IS_SUPERVISORY;
+
+    // --- Guarantee every set key exists and is valid
+    for (let i = 1; i <= TOTAL_SETS; i++) {
+      const key = String(i);
+      try {
+        const val = appState[key];
+        if (!val || typeof val !== "object" || Array.isArray(val)) {
+          appState[key] = buildFreshSetState(key);
+        } else {
+          repairSetState(val, key, i === 1);
+        }
+      } catch (e) {
+        console.error("[Exam] Set init error for key", key, e);
+        appState[key] = buildFreshSetState(key);
+      }
+    }
+
+    // --- Absolute safety net: CURRENT_SET must ALWAYS be valid
+    if (!appState[CURRENT_SET] || typeof appState[CURRENT_SET] !== "object") {
+      console.warn("[Exam] CURRENT_SET missing after loop – forcing init:", CURRENT_SET);
+      appState[CURRENT_SET] = buildFreshSetState(CURRENT_SET);
+    }
+
+    persistState();
+  }
+
+  // ============================================================
+  //  BOOT
+  // ============================================================
+  window.addEventListener("DOMContentLoaded", function () {
+    try {
+      _boot();
+    } catch (e) {
+      console.error("[Exam] Boot error:", e);
+      var ls = document.getElementById("loading-state");
+      if (ls) {
+        ls.innerHTML =
+          '<div style="color:#c62828;text-align:center;padding:40px 20px">' +
+          "⚠️ The exam could not start. Please refresh the page.<br>" +
+          '<small style="color:#999">' + (e && e.message ? e.message : String(e)) + "</small><br><br>" +
+          '<button onclick="location.reload()" style="padding:10px 24px;background:#673ab7;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px">Refresh</button>' +
+          "</div>";
+      }
+    }
+  });
+
+  function _boot() {
+    initGlobalState();
+
+    // --- Re-read with safety reference (never undefined past this point)
+    var cs = appState[CURRENT_SET];
+    if (!cs) throw new Error("State init failed for set " + CURRENT_SET);
+
+    var formKey = getFormKeyForSetKey(CURRENT_SET);
+    if (formKey === "APPLICATION_UPLOAD" && cs.submitted) {
+      renderLastPage();
+      return;
+    }
+
+    renderNavigationTabs();
+    renderProgressBar();
+
+    // --- Gate checks
+    if (!IS_DEV_MODE && cs.remaining <= 0 && !cs.submitted) {
+      showLockout("⏰ Time Expired", getRedirectMarkup(CURRENT_SET));
+      return;
+    }
+    if (cs.submitted && (cs.remaining <= 0 || formKey === "ESSAY")) {
+      showLockout("✅ Already Submitted", getRedirectMarkup(CURRENT_SET));
+      return;
+    }
+
+    // --- Fetch form questions from Apps Script
+    google.script.run
+      .withSuccessHandler(initializeQuiz)
+      .withFailureHandler(showLoadError)
+      .getFormQuestions(CURRENT_SET);
+  }
+
+  // ============================================================
+  //  REDIRECT MARKUP HELPERS
+  // ============================================================
+  function getRedirectMarkup(setKey) {
+    var setNum = parseInt(setKey, 10);
+    var nextNum = setNum + 1;
+    var nextFormKey = nextNum <= TOTAL_SETS ? getFormKeyForSetKey(String(nextNum)) : null;
+
+    if (nextFormKey === "FIT_PLANNING&16PF_1") {
+      var nextUrl = BASE_WEBAPP_URL + "?set=" + nextNum;
+      return "Your response has been successfully recorded!<br>You may now proceed to the FIT Planning & 16 Personality Factors test.<br><br>" +
+        '<a href="' + nextUrl + '" target="_top" class="redirect-btn">Proceed to FIT Planning & 16 Personality Factors Test →</a>';
+    } else if (nextFormKey === "SUPERVISORY_1") {
+      var nextUrl = BASE_WEBAPP_URL + "?set=" + nextNum;
+      return "Your response has been successfully recorded!<br>You may now proceed to the Supervisory test.<br><br>" +
+        '<a href="' + nextUrl + '" target="_top" class="redirect-btn">Proceed to Supervisory Test →</a>';
+    } else if (nextFormKey === "ESSAY") {
+      var nextUrl = BASE_WEBAPP_URL + "?set=" + nextNum;
+      return "Your response has been successfully recorded!<br>You may now proceed to the Essay section.<br><br>" +
+        '<a href="' + nextUrl + '" target="_top" class="redirect-btn">Proceed to Essay →</a>';
+    } else if (nextFormKey === "APPLICATION_UPLOAD") {
+      var nextUrl = BASE_WEBAPP_URL + "?set=" + nextNum;
+      return "Your response has been successfully recorded!<br>You may now proceed to download and upload the Employment Application Form.<br><br>" +
+        '<a href="' + nextUrl + '" target="_top" class="redirect-btn">Proceed to Application Form →</a>';
+    } else if (nextNum <= TOTAL_SETS) {
+      var nextUrl = BASE_WEBAPP_URL + "?set=" + nextNum;
+      return "<strong>Test " + setKey + "</strong> has been submitted.<br><br>" +
+        '<a href="' + nextUrl + '" target="_top" class="redirect-btn">Proceed to Test ' + nextNum + " →</a>";
+    } else {
+      return "Your responses have been successfully recorded. Our HR Team will review your application and contact you for the next steps of the recruitment process.<br>" +
+        "You may now safely close this tab.";
+    }
+  }
+
+  // ============================================================
+  //  NAVIGATION TABS
+  // ============================================================
+  function renderNavigationTabs() {
+    var navBar = document.getElementById("test-nav-bar");
+    if (!navBar) return;
+    navBar.innerHTML = "";
+
+    for (var i = 1; i <= TOTAL_SETS; i++) {
+      var setKey = String(i);
+      // Always use a fallback so a missing key never crashes
+      var s = (appState[setKey] && typeof appState[setKey] === "object")
+        ? appState[setKey]
+        : buildFreshSetState(setKey);
+
+      var tab = document.createElement("div");
+      var isActive = setKey === CURRENT_SET;
+      var canAccess = IS_DEV_MODE || (s.unlocked && (s.remaining > 0 || !s.submitted));
+
+      var formKey = getFormKeyForSetKey(setKey);
+      var displayTitle = "Test " + i;
+      if (formKey === "ESSAY") {
+        displayTitle = "Essay";
+      } else if (formKey === "APPLICATION_UPLOAD") {
+        displayTitle = "Application Form";
+      }
+
+      if (s.submitted && (s.remaining <= 0 || formKey === "ESSAY" || formKey === "APPLICATION_UPLOAD")) {
+        tab.className = "nav-tab locked";
+        tab.textContent = displayTitle + " ✓";
+      } else if (!s.unlocked) {
+        tab.className = "nav-tab locked";
+        tab.textContent = displayTitle + " 🔒";
+      } else if (s.remaining <= 0) {
+        tab.className = "nav-tab locked";
+        tab.textContent = displayTitle + " ⏰";
+      } else {
+        tab.className = "nav-tab" + (isActive ? " active" : "");
+        var checkMark = s.submitted ? " ✓" : "";
+        if (formKey === "ESSAY" || formKey === "APPLICATION_UPLOAD") {
+          tab.textContent = displayTitle + checkMark;
+        } else {
+          var m = Math.floor(s.remaining / 60);
+          var sec = s.remaining % 60;
+          tab.textContent = displayTitle + checkMark + " (" + m + ":" + (sec < 10 ? "0" : "") + sec + ")";
+        }
+      }
+
+      // Closure: capture setKey
+      (function (sk, accessible) {
+        tab.addEventListener("click", function () {
+          if (sk === CURRENT_SET) return;
+          if (!accessible) return;
+          saveCurrentInputsToState();
+          persistState();
+          stopClock();
+          window.top.location.href = BASE_WEBAPP_URL + "?set=" + sk;
+        });
+      }(setKey, canAccess));
+
+      navBar.appendChild(tab);
+    }
+  }
+
+  // ============================================================
+  //  PROGRESS BAR
+  // ============================================================
+  function renderProgressBar() {
+    var done = 0;
+    for (var i = 1; i <= TOTAL_SETS; i++) {
+      var s = appState[String(i)];
+      if (s && s.submitted === true) done++;
+    }
+    var fill = document.getElementById("progress-bar-fill");
+    if (fill) fill.style.width = Math.round((done / TOTAL_SETS) * 100) + "%";
+  }
+
+  // ============================================================
+  //  QUIZ INITIALIZATION  (server callback)
+  // ============================================================
+  function initializeQuiz(formPackage) {
+    try {
+      var formKey = getFormKeyForSetKey(CURRENT_SET);
+      if (formKey === "APPLICATION_UPLOAD") {
+        document.getElementById("loading-state").style.display = "none";
+        renderApplicationUploadPage();
+        return;
+      }
+      if (formKey === "ESSAY") {
+        document.getElementById("loading-state").style.display = "none";
+        renderEssayPage(formPackage);
+        return;
+      }
+
+      document.getElementById("form-main-title").textContent = formPackage.formTitle || "";
+      document.getElementById("form-main-desc").textContent = formPackage.formDescription || "";
+
+      // Only show Email input card on Set 1
+      if (CURRENT_SET === "1" && formPackage.requiresEmailInput) {
+        document.getElementById("email-field-card").style.display = "block";
+      } else {
+        document.getElementById("email-field-card").style.display = "none";
+      }
+
+      globalQuestions = formPackage.questions || [];
+
+      document.getElementById("loading-state").style.display = "none";
+      document.getElementById("dynamic-form").style.display = "block";
+
+      renderQuestions();
+      repopulateSavedAnswers();
+      startClock();
+    } catch (e) {
+      console.error("[Exam] initializeQuiz error:", e);
+      showLoadError(e.message || String(e));
+    }
+  }
+
+  function showLoadError(error) {
+    var el = document.getElementById("loading-state");
+    if (!el) return;
+    el.innerHTML =
+      '<div style="color:#c62828;text-align:center;padding:40px 20px">' +
+      "⚠️ Failed to load the exam.<br>" +
+      '<small style="color:#666">' + escHtml(String(error)) + "</small><br><br>" +
+      '<button onclick="location.reload()" style="padding:10px 24px;background:#673ab7;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px">Retry</button>' +
+      "</div>";
+  }
+
+  // ============================================================
+  //  QUESTION RENDERING
+  // ============================================================
+  function renderQuestions() {
+    var container = document.getElementById("dynamic-questions-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    globalQuestions.forEach(function (q) {
+      var card = document.createElement("div");
+
+      // PAGE_BREAK
+      if (q.type === "PAGE_BREAK") {
+        card.className = "section-break-card";
+        card.innerHTML =
+          '<div class="section-title">' + escHtml(q.title) + "</div>" +
+          (q.helpText ? '<div class="section-desc">' + escHtml(q.helpText) + "</div>" : "");
+        container.appendChild(card);
+        return;
+      }
+
+      // SECTION_HEADER
+      if (q.type === "SECTION_HEADER") {
+        card.className = "section-header-card";
+        card.innerHTML =
+          '<div class="header-card-title">' + escHtml(q.title) + "</div>" +
+          (q.helpText ? '<div class="header-card-desc">' + escHtml(q.helpText) + "</div>" : "");
+        container.appendChild(card);
+        return;
+      }
+
+      // IMAGE (standalone)
+      if (q.type === "IMAGE") {
+        card.className = "quiz-card";
+        card.innerHTML =
+          (q.title ? '<div class="question-title">' + escHtml(q.title) + "</div>" : "") +
+          (q.helpText ? '<div class="question-help">' + escHtml(q.helpText) + "</div>" : "") +
+          (q.questionImageData
+            ? '<img class="form-image" src="' + q.questionImageData + '" alt="' + escHtml(q.title) + '">'
+            : "");
+        container.appendChild(card);
+        return;
+      }
+
+      // Standard question
+      card.className = "quiz-card";
+      card.id = "card_" + q.index;
+
+      var ast = q.required ? '<span class="required-asterisk">*</span>' : "";
+      var html = '<div class="question-title">' + escHtml(q.title) + ast + "</div>";
+
+      if (q.helpText) {
+        html += '<div class="question-help">' + escHtml(q.helpText) + "</div>";
+      }
+      if (q.questionImageData) {
+        html += '<img class="form-image" src="' + q.questionImageData + '" alt="Question image">';
+      }
+
+      switch (q.type) {
+        case "TEXT":
+          html += '<input type="text" data-index="' + q.index + '" class="quiz-input" autocomplete="off">';
+          break;
+        case "DATE":
+          html += '<input type="date" data-index="' + q.index + '" class="quiz-input">';
+          break;
+        case "TIME":
+          html += '<input type="time" data-index="' + q.index + '" class="quiz-input">';
+          break;
+        case "PARAGRAPH_TEXT":
+          html += '<textarea rows="4" data-index="' + q.index + '" class="quiz-input"></textarea>';
+          break;
+        case "LIST":
+          html += '<select data-index="' + q.index + '" class="quiz-input"><option value="">— Select —</option>';
+          q.choices.forEach(function (c) {
+            html += '<option value="' + escHtml(c) + '">' + escHtml(c) + "</option>";
+          });
+          html += "</select>";
+          break;
+        case "MULTIPLE_CHOICE":
+          q.choices.forEach(function (choice, cIdx) {
+            html +=
+              '<div class="option-row">' +
+              '<input type="radio" name="q_' + q.index + '" value="' + escHtml(choice) +
+              '" id="q_' + q.index + "_" + cIdx + '" class="quiz-radio">' +
+              '<label for="q_' + q.index + "_" + cIdx + '">' + escHtml(choice) + "</label>" +
+              "</div>";
+          });
+          break;
+        case "CHECKBOX":
+          q.choices.forEach(function (choice, cIdx) {
+            html +=
+              '<div class="option-row">' +
+              '<input type="checkbox" name="q_' + q.index + '" value="' + escHtml(choice) +
+              '" id="q_' + q.index + "_" + cIdx + '" class="q-check-' + q.index + '">' +
+              '<label for="q_' + q.index + "_" + cIdx + '">' + escHtml(choice) + "</label>" +
+              "</div>";
+          });
+          break;
+      }
+
+      html += '<div class="field-error" id="error_' + q.index + '">This field is required.</div>';
+      card.innerHTML = html;
+      container.appendChild(card);
+    });
+
+    attachInputListeners();
+  }
+
+  function attachInputListeners() {
+    var container = document.getElementById("dynamic-questions-container");
+    if (container) {
+      container.addEventListener("change", function (e) {
+        saveCurrentInputsToState();
+        validateSingleInput(e.target);
+      });
+      container.addEventListener("input", function (e) {
+        saveCurrentInputsToState();
+        validateSingleInput(e.target);
+      });
+    }
+    var emailEl = document.getElementById("responderEmail");
+    if (emailEl) {
+      emailEl.addEventListener("input", function (e) {
+        saveCurrentInputsToState();
+        validateSingleInput(e.target);
+      });
+    }
+  }
+
+  function validateSingleInput(target) {
+    if (!target) return;
+    if (target.id === "responderEmail") {
+      var emailCard = document.getElementById("email-field-card");
+      var emailErr = document.getElementById("error_email");
+      var emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      var val = target.value.trim();
+      if (val && emailReg.test(val)) {
+        if (emailCard) emailCard.classList.remove("has-error");
+        if (emailErr) emailErr.style.display = "none";
+      }
+      return;
+    }
+
+    var qIndex = target.getAttribute("data-index");
+    if (!qIndex) {
+      var name = target.getAttribute("name");
+      if (name && name.startsWith("q_")) {
+        qIndex = name.split("_")[1];
+      }
+    }
+    if (!qIndex) {
+      var classes = target.className;
+      if (classes && classes.indexOf("q-check-") !== -1) {
+        var match = classes.match(/q-check-(\d+)/);
+        if (match) qIndex = match[1];
+      }
+    }
+
+    if (qIndex !== undefined && qIndex !== null) {
+      var card = document.getElementById("card_" + qIndex);
+      var errEl = document.getElementById("error_" + qIndex);
+      var q = globalQuestions.find(function (item) { return String(item.index) === String(qIndex); });
+      if (q) {
+        var savedAnswers = (appState[CURRENT_SET] && appState[CURRENT_SET].answers) ? appState[CURRENT_SET].answers : {};
+        var val = savedAnswers[q.id];
+        var isCfit2 = (CURRENT_SET == 2 || String(CURRENT_SET) === "2" || getFormKeyForSetKey(CURRENT_SET) === "CFIT&J&C_2");
+
+        if (isCfit2 && q.type === "CHECKBOX") {
+          var checkedCount = 0;
+          if (val !== undefined && val !== null && String(val).trim() !== "") {
+            checkedCount = val.split("-").length;
+          }
+          if (checkedCount >= 2) {
+            if (card) card.classList.remove("has-error");
+            if (errEl) errEl.style.display = "none";
+          } else if (checkedCount === 1) {
+            if (card) card.classList.add("has-error");
+            if (errEl) {
+              errEl.textContent = "Must select at least 2 options";
+              errEl.style.display = "block";
+            }
+          } else {
+            // checkedCount is 0
+            if (card && card.classList.contains("has-error")) {
+              if (errEl) {
+                errEl.textContent = "This field is required.";
+                errEl.style.display = "block";
+              }
+            }
+          }
+        } else {
+          var hasVal = false;
+          if (val !== undefined && val !== null && String(val).trim() !== "") {
+            hasVal = true;
+          }
+          if (hasVal) {
+            if (card) card.classList.remove("has-error");
+            if (errEl) errEl.style.display = "none";
+          }
+        }
+      }
+    }
+  }
+
+  function validateAllInputs() {
+    var isValid = true;
+    var savedAnswers = (appState[CURRENT_SET] && appState[CURRENT_SET].answers)
+      ? appState[CURRENT_SET].answers
+      : {};
+
+    var emailCard = document.getElementById("email-field-card");
+    if (emailCard && emailCard.style.display !== "none") {
+      var emailEl = document.getElementById("responderEmail");
+      var emailVal = emailEl ? emailEl.value.trim() : "";
+      var emailErr = document.getElementById("error_email");
+      var emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailVal || !emailReg.test(emailVal)) {
+        if (emailCard) emailCard.classList.add("has-error");
+        if (emailErr) emailErr.style.display = "block";
+        isValid = false;
+      } else {
+        if (emailCard) emailCard.classList.remove("has-error");
+        if (emailErr) emailErr.style.display = "none";
+      }
+    }
+
+    var isCfit2 = (CURRENT_SET == 2 || String(CURRENT_SET) === "2" || getFormKeyForSetKey(CURRENT_SET) === "CFIT&J&C_2");
+
+    globalQuestions.forEach(function (q) {
+      if (!q.isQuestion) return;
+      var card = document.getElementById("card_" + q.index);
+      var errEl = document.getElementById("error_" + q.index);
+      var v = savedAnswers[q.id];
+
+      if (isCfit2 && q.type === "CHECKBOX") {
+        var checkedCount = 0;
+        if (v !== undefined && v !== null && String(v).trim() !== "") {
+          checkedCount = v.split("-").length;
+        }
+        if (checkedCount === 0) {
+          if (card) card.classList.add("has-error");
+          if (errEl) {
+            errEl.textContent = "This field is required.";
+            errEl.style.display = "block";
+          }
+          isValid = false;
+        } else if (checkedCount < 2) {
+          if (card) card.classList.add("has-error");
+          if (errEl) {
+            errEl.textContent = "Must select at least 2 options";
+            errEl.style.display = "block";
+          }
+          isValid = false;
+        } else {
+          if (card) card.classList.remove("has-error");
+          if (errEl) errEl.style.display = "none";
+        }
+      } else {
+        var hasAnswer = false;
+        if (v !== undefined && v !== null && String(v).trim() !== "") {
+          hasAnswer = true;
+        }
+        if (!hasAnswer) {
+          if (card) card.classList.add("has-error");
+          if (errEl) {
+            errEl.textContent = "This field is required.";
+            errEl.style.display = "block";
+          }
+          isValid = false;
+        } else {
+          if (card) card.classList.remove("has-error");
+          if (errEl) errEl.style.display = "none";
+        }
+      }
+    });
+
+    return isValid;
+  }
+
+  // ============================================================
+  //  REPOPULATE SAVED ANSWERS
+  //  NOTE: Does NOT use CSS.escape (not available in GAS sandbox)
+  // ============================================================
+  function repopulateSavedAnswers() {
+    try {
+      var saved = appState[CURRENT_SET] && appState[CURRENT_SET].answers
+        ? appState[CURRENT_SET].answers
+        : {};
+
+      // Email
+      var emailEl = document.getElementById("responderEmail");
+      if (emailEl && saved["email"]) emailEl.value = saved["email"];
+
+      globalQuestions.forEach(function (q) {
+        var val = saved[q.id];
+        if (val === undefined || val === null || val === "") return;
+
+        switch (q.type) {
+          case "TEXT":
+          case "PARAGRAPH_TEXT":
+          case "DATE":
+          case "TIME": {
+            var el = document.querySelector('.quiz-input[data-index="' + q.index + '"]');
+            if (el) el.value = val;
+            break;
+          }
+          case "LIST": {
+            var sel = document.querySelector('select[data-index="' + q.index + '"]');
+            if (sel) sel.value = val;
+            break;
+          }
+          case "MULTIPLE_CHOICE": {
+            // Iterate all radios in the group and match by value (avoids CSS.escape)
+            var radios = document.querySelectorAll('input[name="q_' + q.index + '"]');
+            for (var r = 0; r < radios.length; r++) {
+              if (radios[r].value === val) { radios[r].checked = true; break; }
+            }
+            break;
+          }
+          case "CHECKBOX": {
+            var isCfit2 = (CURRENT_SET == 2 || String(CURRENT_SET) === "2" || getFormKeyForSetKey(CURRENT_SET) === "CFIT&J&C_2");
+            var vals = isCfit2 ? val.split("-") : val.split(", ");
+            var checkboxes = document.querySelectorAll(".q-check-" + q.index);
+            for (var c = 0; c < checkboxes.length; c++) {
+              if (vals.indexOf(checkboxes[c].value) !== -1) checkboxes[c].checked = true;
+            }
+            break;
+          }
+        }
+      });
+    } catch (e) {
+      console.error("[Exam] repopulateSavedAnswers error:", e);
+    }
+  }
+
+  // ============================================================
+  //  TIMER
+  // ============================================================
+  function startClock() {
+    var formKey = getFormKeyForSetKey(CURRENT_SET);
+    var timerBar = document.getElementById("timer-bar");
+    if (formKey === "ESSAY" || formKey === "APPLICATION_UPLOAD") {
+      if (timerBar) timerBar.style.display = "none";
+      return;
+    } else {
+      if (timerBar) timerBar.style.display = "block";
+    }
+
+    updateClockDisplay(); // Show immediately — no 1-second blank
+    updateTimerBarColor();
+
+    countdownInterval = setInterval(function () {
+      try {
+        var s = appState[CURRENT_SET];
+        if (!s) return;
+
+        if (s.remaining > 0) {
+          s.remaining -= 1;
+          s.elapsed += 1;
+          persistState();
+        }
+
+        updateClockDisplay();
+        updateTimerBarColor();
+
+        // Refresh nav labels every 15 s (keeps times readable)
+        if (s.elapsed % 15 === 0) renderNavigationTabs();
+
+        if (s.remaining <= 0) {
+          stopClock();
+          handleAutoSubmit();
+        }
+      } catch (e) {
+        console.error("[Exam] Clock tick error:", e);
+        stopClock();
+      }
+    }, 1000);
+  }
+
+  function stopClock() {
+    if (countdownInterval !== null) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+  }
+
+  function updateClockDisplay() {
+    var s = appState[CURRENT_SET];
+    var rem = s ? Math.max(0, s.remaining) : 0;
+    var m = Math.floor(rem / 60);
+    var sec = rem % 60;
+    var el = document.getElementById("clock");
+    if (el) el.textContent = (m < 10 ? "0" : "") + m + ":" + (sec < 10 ? "0" : "") + sec;
+  }
+
+  function updateTimerBarColor() {
+    var bar = document.getElementById("timer-bar");
+    if (!bar) return;
+    var s = appState[CURRENT_SET];
+    if (!s) return;
+    var formKey = getFormKeyForSetKey(CURRENT_SET);
+    var pct = s.remaining / (TEST_LIMITS[formKey] || 180);
+    bar.classList.remove("warning", "critical");
+    if (pct <= 0.10) bar.classList.add("critical");
+    else if (pct <= 0.25) bar.classList.add("warning");
+  }
+
+  // ============================================================
+  //  SAVE INPUTS → STATE
+  // ============================================================
+  function saveCurrentInputsToState() {
+    try {
+      // Ensure the state slot exists
+      if (!appState[CURRENT_SET] || typeof appState[CURRENT_SET] !== "object") {
+        appState[CURRENT_SET] = buildFreshSetState(CURRENT_SET);
+      }
+      if (!appState[CURRENT_SET].answers) {
+        appState[CURRENT_SET].answers = {};
+      }
+
+      var answers = {};
+
+      var emailEl = document.getElementById("responderEmail");
+      if (emailEl && emailEl.value) answers["email"] = emailEl.value;
+
+      globalQuestions.forEach(function (q) {
+        if (!q.isQuestion) return;
+
+        switch (q.type) {
+          case "TEXT":
+          case "PARAGRAPH_TEXT":
+          case "DATE":
+          case "TIME": {
+            var el = document.querySelector('.quiz-input[data-index="' + q.index + '"]');
+            if (el && el.value !== "") answers[q.id] = el.value;
+            break;
+          }
+          case "LIST": {
+            var sel = document.querySelector('select[data-index="' + q.index + '"]');
+            if (sel && sel.value !== "") answers[q.id] = sel.value;
+            break;
+          }
+          case "MULTIPLE_CHOICE": {
+            var checked = document.querySelector('input[name="q_' + q.index + '"]:checked');
+            if (checked) answers[q.id] = checked.value;
+            break;
+          }
+          case "CHECKBOX": {
+            var cbs = document.querySelectorAll(".q-check-" + q.index + ":checked");
+            if (cbs.length > 0) {
+              var isCfit2 = (CURRENT_SET == 2 || String(CURRENT_SET) === "2" || getFormKeyForSetKey(CURRENT_SET) === "CFIT&J&C_2");
+              var separator = isCfit2 ? "-" : ", ";
+              answers[q.id] = Array.prototype.map.call(cbs, function (cb) { return cb.value; }).join(separator);
+            }
+            break;
+          }
+        }
+      });
+
+      appState[CURRENT_SET].answers = answers;
+      persistState();
+    } catch (e) {
+      console.error("[Exam] saveCurrentInputsToState error:", e);
+    }
+  }
+
+  // ============================================================
+  //  SUBMISSION
+  // ============================================================
+  function handleManualSubmit(e) {
+    e.preventDefault();
+    saveCurrentInputsToState();
+
+    var isValid = validateAllInputs();
+    if (!isValid) {
+      var firstError = document.querySelector(".quiz-card.has-error");
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
+    }
+
+    executeTransmission(false);
+  }
+
+  function handleAutoSubmit() {
+    saveCurrentInputsToState();
+    executeTransmission(true);
+  }
+
+  function executeTransmission(isTimeout) {
+    stopClock();
+
+    var navBar = document.getElementById("test-nav-bar");
+    if (navBar) navBar.style.pointerEvents = "none";
+
+    document.getElementById("quiz-wrapper").style.display = "none";
+
+    var overlay = document.getElementById("overlay");
+    overlay.style.display = "flex";
+    document.getElementById("overlay-icon").textContent = isTimeout ? "⏰" : "📤";
+    document.getElementById("overlay-title").textContent = isTimeout ? "Time's Up!" : "Submitting…";
+    document.getElementById("overlay-msg").textContent = "Saving your answers, please wait…";
+
+    // Build ordered answer array
+    var savedAnswers = (appState[CURRENT_SET] && appState[CURRENT_SET].answers)
+      ? appState[CURRENT_SET].answers
+      : {};
+    var answerArray = [];
+
+    var emailCard = document.getElementById("email-field-card");
+    if (emailCard && emailCard.style.display !== "none") {
+      answerArray.push(savedAnswers["email"] || "[No Answer]");
+    }
+
+    globalQuestions.forEach(function (q) {
+      if (!q.isQuestion) return;
+      var v = savedAnswers[q.id];
+      answerArray.push(v !== undefined && v !== null ? v : "[No Answer]");
+    });
+
+    var elapsed = appState[CURRENT_SET] ? appState[CURRENT_SET].elapsed : 0;
+    var elapsedStr = Math.floor(elapsed / 60) + "m " + (elapsed % 60) + "s";
+
+    var payload = {
+      answers: answerArray,
+      isTimeout: isTimeout,
+      setNum: CURRENT_SET,
+      elapsedTimeStr: elapsedStr,
+      candidateId: appState.candidateId,
+      IS_SUPERVISORY: IS_SUPERVISORY
+    };
+
+    google.script.run
+      .withSuccessHandler(function (r) { onSubmitSuccess(r, isTimeout); })
+      .withFailureHandler(onSubmitFailure)
+      .processDynamicSubmission(payload);
+  }
+
+  function onSubmitSuccess(response, isTimeout) {
+    if (!response || !response.success) {
+      onSubmitFailure(response ? response.error : "Unknown server error");
+      return;
+    }
+
+    // Mark submitted
+    if (appState[CURRENT_SET]) {
+      appState[CURRENT_SET].submitted = true;
+      if (isTimeout) {
+        appState[CURRENT_SET].remaining = 0;
+      }
+    }
+
+    var navBar = document.getElementById("test-nav-bar");
+    if (navBar) navBar.style.pointerEvents = "auto";
+
+    // Unlock next set
+    var nextKey = String(parseInt(CURRENT_SET, 10) + 1);
+    if (appState[nextKey]) {
+      appState[nextKey].unlocked = true;
+    }
+
+    persistState();
+
+    var setNum = parseInt(CURRENT_SET, 10);
+    var nextNum = setNum + 1;
+    var nextFormKey = nextNum <= TOTAL_SETS ? getFormKeyForSetKey(String(nextNum)) : null;
+
+    if (nextFormKey === "FIT_PLANNING&16PF_1" || nextFormKey === "SUPERVISORY_1" || nextFormKey === "ESSAY" || nextFormKey === "APPLICATION_UPLOAD") {
+      document.getElementById("overlay-icon").textContent = "🎉";
+      document.getElementById("overlay-title").textContent = "Section Completed";
+      document.getElementById("overlay-msg").innerHTML = getRedirectMarkup(CURRENT_SET);
+    } else if (nextNum <= TOTAL_SETS) {
+      document.getElementById("overlay-icon").textContent = "✅";
+      document.getElementById("overlay-title").textContent = "Progress Saved";
+      var nextUrl = BASE_WEBAPP_URL + "?set=" + nextNum;
+      document.getElementById("overlay-msg").innerHTML =
+        "<strong>Test " + CURRENT_SET + "</strong> answers have been logged successfully.<br><br>" +
+        "Redirecting to Test " + nextNum + " in 3 seconds...<br>" +
+        '<a href="' + nextUrl + '" target="_top" class="redirect-btn">Proceed Immediately →</a>';
+      setTimeout(function () {
+        window.top.location.href = nextUrl;
+      }, 3000);
+    } else {
+      // Last page / congratulations
+      renderLastPage();
+    }
+  }
+
+  function onSubmitFailure(error) {
+    var navBar = document.getElementById("test-nav-bar");
+    if (navBar) navBar.style.pointerEvents = "auto";
+
+    document.getElementById("overlay-icon").textContent = "⚠️";
+    document.getElementById("overlay-title").textContent = "Submission Error";
+    document.getElementById("overlay-msg").innerHTML =
+      "Something went wrong while saving your answers.<br>" +
+      '<small style="color:#666">' + escHtml(String(error || "Unknown error")) + "</small><br><br>" +
+      '<button onclick="retrySubmit()" class="redirect-btn" style="border:none;cursor:pointer;">Retry</button>';
+  }
+
+  function retrySubmit() {
+    document.getElementById("overlay-icon").textContent = "📤";
+    document.getElementById("overlay-title").textContent = "Retrying…";
+    document.getElementById("overlay-msg").textContent = "Attempting to save again…";
+    executeTransmission(false);
+  }
+
+  // ============================================================
+  //  LOCKOUT
+  // ============================================================
+  function showLockout(titleText, msgText) {
+    stopClock();
+    var navBar = document.getElementById("test-nav-bar");
+    if (navBar) navBar.style.pointerEvents = "auto";
+
+    var ids = ["quiz-wrapper", "timer-bar"];
+    ids.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
+    var overlay = document.getElementById("overlay");
+    if (overlay) overlay.style.display = "flex";
+    document.getElementById("overlay-icon").textContent = "🔒";
+    document.getElementById("overlay-title").textContent = titleText;
+    document.getElementById("overlay-msg").innerHTML = msgText;
+  }
+
+  // ============================================================
+  //  UTILITY
+  // ============================================================
+  function escHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+</script>
