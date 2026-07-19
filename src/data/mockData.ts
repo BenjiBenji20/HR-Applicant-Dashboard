@@ -5,9 +5,12 @@ export const initialSummaryResults: ApplicantSummary[] = [
     id: "8a8d8eed-1600-41fa-9023-b7a687df816d",
     metadata: {
       timestamp: "2026-07-08T10:15:00Z",
-      supervisoryTest: true,
+      supervisoryTest: false, // Changed to non-supervisory!
       emailAddress: "john.doe@example.com",
-      fullName: "John Doe"
+      fullName: "John Doe",
+      age: 28,
+      education: "Bachelor of Science in Information Technology",
+      contactNumber: "+1 (555) 019-2834"
     },
     intent: {
       positionAppliedFor: "Senior Software Engineer",
@@ -24,9 +27,12 @@ export const initialSummaryResults: ApplicantSummary[] = [
     id: "2b9a7c8d-3400-52ea-8134-c7a687df554a",
     metadata: {
       timestamp: "2026-07-07T09:30:00Z",
-      supervisoryTest: true,
+      supervisoryTest: true, // Supervisory!
       emailAddress: "sarah.jenkins@example.com",
-      fullName: "Sarah Jenkins"
+      fullName: "Sarah Jenkins",
+      age: 34,
+      education: "Master of Science in Human Resource Management",
+      contactNumber: "+1 (555) 014-9876"
     },
     intent: {
       positionAppliedFor: "HR Specialist",
@@ -66,9 +72,13 @@ export const initialDetailedProfiles: Record<string, ApplicantDetail> = {
     },
     mentalAbility: "The candidate demonstrates exceptional fluid intelligence (CFIT) and robust planning mechanisms. In interpersonal parameters, John shows a solid propensity for leading large teams.",
     supervisoryIndexesAI: {
-      index1Assessment: "Demonstrates strong administrative oversight with minimal micromanagement tendencies.",
-      index2Assessment: "Highly empathetic leadership profile prioritizing long-term team retention."
+      index1Assessment: "",
+      index2Assessment: "",
+      index3Assessment: "",
+      index4Assessment: ""
     },
+    overAllAssessment: "",
+    aiGenPersonalityAssessment: "The candidate exhibits below-average scores across most personality dimensions, particularly emotional stability and conscientiousness. He shows high self-reliance but low sociability, indicating a preference for solitary, highly focused technical roles rather than collaborative leadership. He handles routine tasks well but may require support in high-stress, rapidly changing environments.",
     allTestTimeConsumed: {
       cfitTestTime: {
         test1: { consumedTime: "1m 32s", timeFrame: "3 mins", testAnswered: 1, testItem: 13 },
@@ -117,9 +127,13 @@ export const initialDetailedProfiles: Record<string, ApplicantDetail> = {
     },
     mentalAbility: "Sarah displays phenomenal verbal comprehension and exceptional organizational design abilities. Her 16PF profile identifies her as warm and highly sociable. This translates directly to outstanding score ratings in Employee and Human Relations.",
     supervisoryIndexesAI: {
-      index1Assessment: "Excellent at building team consensus and driving employee engagement.",
-      index2Assessment: "Strong interpersonal focus, highly effective at managing complex employee disputes."
+      index1Assessment: "Demonstrates strong administrative oversight with minimal micromanagement tendencies.",
+      index2Assessment: "Highly empathetic leadership profile prioritizing long-term team retention.",
+      index3Assessment: "Displays excellent competency in resolving worker grievances and fostering a collaborative space.",
+      index4Assessment: "Maintains optimal human relations practices with strong focus on active feedback loops."
     },
+    overAllAssessment: "Shows great potential for senior leadership tracks, exhibiting balanced management logic and human relations values.",
+    aiGenPersonalityAssessment: "A highly resilient, conscientious, and open-minded profile. Exhibits above-average emotional stability and superior sense of responsibility, aligning perfectly with HR specialist expectations. She is communicative, collaborative, and handles stress with poise.",
     allTestTimeConsumed: {
       cfitTestTime: {
         test1: { consumedTime: "1m 20s", timeFrame: "3 mins", testAnswered: 1, testItem: 13 },

@@ -54,31 +54,29 @@ export default function App() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  // Load summary results from localStorage or mockData
+  // Load summary results and detailed profiles from localStorage with unified cache invalidation check
   const [summaryResults, setSummaryResults] = useState<ApplicantSummary[]>(() => {
-    const saved = localStorage.getItem("summaryResults");
-    if (saved) {
+    const savedSummary = localStorage.getItem("summaryResults");
+    const savedDetail = localStorage.getItem("detailedProfiles");
+    
+    let isOutdated = false;
+    
+    if (savedSummary) {
       try {
-        const parsed = JSON.parse(saved);
-        if (parsed.length > 0 && (!parsed[0].scores || "16pf" in parsed[0].scores)) {
-          localStorage.removeItem("summaryResults");
-          localStorage.removeItem("detailedProfiles");
-          return initialSummaryResults;
+        const parsed = JSON.parse(savedSummary);
+        if (parsed.length === 0 || !parsed[0].scores || "16pf" in parsed[0].scores || !parsed[0].metadata || !("age" in parsed[0].metadata)) {
+          isOutdated = true;
         }
-        return parsed;
       } catch (e) {
-        console.error("Failed to parse saved summary results:", e);
+        isOutdated = true;
       }
+    } else {
+      isOutdated = true;
     }
-    return initialSummaryResults;
-  });
-
-  // Load detailed profiles from localStorage or mockData
-  const [detailedProfiles, setDetailedProfiles] = useState<Record<string, ApplicantDetail>>(() => {
-    const saved = localStorage.getItem("detailedProfiles");
-    if (saved) {
+    
+    if (savedDetail) {
       try {
-        const parsed = JSON.parse(saved);
+        const parsed = JSON.parse(savedDetail);
         const firstKey = Object.keys(parsed)[0];
         if (firstKey) {
           const profile = parsed[firstKey];
@@ -87,17 +85,42 @@ export default function App() {
             (timeConsumed.cfitTestTime?.test1 && 'testAnswered' in timeConsumed.cfitTestTime.test1) ||
             (timeConsumed.jcTestTime?.test1 && 'testAnswered' in timeConsumed.jcTestTime.test1)
           );
-          if (!timeConsumed || !hasTestAnswered) {
-            localStorage.removeItem("detailedProfiles");
-            return initialDetailedProfiles;
+          const detailOutdated = !profile || !("aiGenPersonalityAssessment" in profile) || !("overAllAssessment" in profile);
+          if (!timeConsumed || !hasTestAnswered || detailOutdated) {
+            isOutdated = true;
           }
+        } else {
+          isOutdated = true;
         }
-        return parsed;
       } catch (e) {
-        console.error("Failed to parse saved detailed profiles:", e);
+        isOutdated = true;
       }
+    } else {
+      isOutdated = true;
     }
-    return initialDetailedProfiles;
+    
+    if (isOutdated) {
+      localStorage.removeItem("summaryResults");
+      localStorage.removeItem("detailedProfiles");
+      return initialSummaryResults;
+    }
+    
+    return savedSummary ? JSON.parse(savedSummary) : initialSummaryResults;
+  });
+
+  const [detailedProfiles, setDetailedProfiles] = useState<Record<string, ApplicantDetail>>(() => {
+    const savedSummary = localStorage.getItem("summaryResults");
+    const savedDetail = localStorage.getItem("detailedProfiles");
+    
+    if (!savedSummary || !savedDetail) {
+      return initialDetailedProfiles;
+    }
+    
+    try {
+      return JSON.parse(savedDetail);
+    } catch (e) {
+      return initialDetailedProfiles;
+    }
   });
 
   // Modal / Drawer Active States

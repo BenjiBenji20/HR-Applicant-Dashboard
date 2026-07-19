@@ -16,6 +16,9 @@ export interface SharedMetadata {
   supervisoryTest: boolean; // Yes | No
   emailAddress: string;
   fullName: string;
+  age: number;
+  education: string;
+  contactNumber: string;
 }
 
 export interface SharedIntent {
@@ -63,7 +66,11 @@ export interface ApplicantDetail {
   supervisoryIndexesAI: {
     index1Assessment: string; // Long form AI text block
     index2Assessment: string; // Long form AI text block
+    index3Assessment: string; // Long form AI text block
+    index4Assessment: string; // Long form AI text block
   };
+  overAllAssessment: string; // not ai generated
+  aiGenPersonalityAssessment: string;
   allTestTimeConsumed: AllTestTimeConsumed;
 }
 
