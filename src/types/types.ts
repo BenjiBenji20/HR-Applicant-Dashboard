@@ -8,7 +8,7 @@ export const classifications = [
   'Superior'
 ] as const;
 
-export type Classification = typeof classifications[number];
+export type Classification = typeof classifications[number] | "N/A";
 
 // Shared structures
 export interface SharedMetadata {

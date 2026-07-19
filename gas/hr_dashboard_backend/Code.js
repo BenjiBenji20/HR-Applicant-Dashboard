@@ -15,11 +15,13 @@ var IS_DEVELOPMENT = true;
 
 // Authentication secret key. If present in Script Properties under SPREADSHEET_SECRET,
 // it will override this default value. Keep this secure.
-var SECRET_KEY = "";
+var scriptProperties = PropertiesService.getScriptProperties();
+
+var SECRET_KEY = scriptProperties.getProperty('SECRET_KEY');
 
 // Spreadsheet IDs
-var TEST_SPREADSHEET_ID = "";
-var PROD_SPREADSHEET_ID = "";
+var TEST_SPREADSHEET_ID = scriptProperties.getProperty('TEST_SPREADSHEET_ID');
+var PROD_SPREADSHEET_ID = scriptProperties.getProperty('PROD_SPREADSHEET_ID');
 
 // Main data tab configuration
 var TAB_NAME = "Final Result";
@@ -116,6 +118,14 @@ function doPost(e) {
       }
       var isValid = verifyCredentials(username, password);
       return respondJson({ success: isValid });
+    } else if (action === "save_ai_assessment") {
+      var id = body.id || e.parameter.id;
+      var assessmentData = body.data || body;
+      if (!id) {
+        return respondJson({ success: false, error: "Missing applicant ID" }, 400);
+      }
+      var success = saveAiAssessment(id, assessmentData);
+      return respondJson({ success: success });
     } else {
       return respondJson({ success: false, error: "Unknown action: " + action }, 400);
     }
@@ -459,7 +469,7 @@ function parseDateTimeString(val) {
 
 function parseClassification(val) {
   var str = parseString(val);
-  if (!str) return "Average";
+  if (!str) return "N/A";
   
   var lower = str.toLowerCase();
   for (var i = 0; i < classifications.length; i++) {

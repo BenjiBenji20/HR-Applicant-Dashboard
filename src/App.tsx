@@ -123,6 +123,28 @@ export default function App() {
     }
   });
 
+  // Load live data from the proxy endpoint on mount with mock fallback
+  useEffect(() => {
+    async function fetchLiveRecords() {
+      try {
+        const response = await fetch("/api/applicants?action=list&page=1&limit=100");
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+        const result = await response.json();
+        if (result.success && result.data) {
+          setSummaryResults(result.data);
+          if (result.details) {
+            setDetailedProfiles(result.details);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load database records from server proxy. Operating in local mock cache mode.", err);
+      }
+    }
+    fetchLiveRecords();
+  }, []);
+
   // Modal / Drawer Active States
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
   const [activeAIPsychometricApplicant, setActiveAIPsychometricApplicant] = useState<ApplicantSummary | null>(null);
@@ -152,10 +174,6 @@ export default function App() {
   }, [detailedProfiles]);
 
   // Handlers for App level actions
-  const handleDeleteRows = (ids: string[]) => {
-    const updated = summaryResults.filter((app) => !ids.includes(app.id));
-    setSummaryResults(updated);
-  };
 
   const handleDownloadRows = (ids: string[]) => {
     const id = ids[0];
@@ -232,7 +250,7 @@ export default function App() {
     setActiveAIPsychometricApplicant(applicant);
   };
 
-  const handleSavePsychometric = (id: string, updatedPsychometric: string) => {
+  const handleSavePsychometric = (id: string, updatedFields: Partial<ApplicantDetail>) => {
     setDetailedProfiles((prev) => {
       const existing = prev[id];
       if (existing) {
@@ -240,7 +258,13 @@ export default function App() {
           ...prev,
           [id]: {
             ...existing,
-            mentalAbility: updatedPsychometric,
+            ...updatedFields,
+            supervisoryIndexesAI: updatedFields.supervisoryIndexesAI
+              ? {
+                  ...existing.supervisoryIndexesAI,
+                  ...updatedFields.supervisoryIndexesAI,
+                }
+              : existing.supervisoryIndexesAI,
           },
         };
       }
@@ -329,7 +353,6 @@ export default function App() {
             {activeTab === "dashboard" ? (
               <DashboardTab
                 finalResults={summaryResults}
-                onDeleteRows={handleDeleteRows}
                 onDownloadRows={handleDownloadRows}
                 onOpenAIModal={handleOpenAIModal}
                 onOpenRawScores={handleOpenRawScores}

@@ -4,17 +4,14 @@ import {
   Filter,
   Sparkles,
   Printer,
-  Trash2,
   Download,
   Eye,
-  AlertTriangle,
   Database
 } from "lucide-react";
 import { ApplicantSummary } from "../types/types";
 
 interface DashboardTabProps {
   finalResults: ApplicantSummary[];
-  onDeleteRows: (ids: string[]) => void;
   onDownloadRows: (ids: string[]) => void;
   onOpenAIModal: (applicant: ApplicantSummary) => void;
   onOpenRawScores: (id: string) => void;
@@ -23,7 +20,6 @@ interface DashboardTabProps {
 
 export default function DashboardTab({
   finalResults,
-  onDeleteRows,
   onDownloadRows,
   onOpenAIModal,
   onOpenRawScores,
@@ -40,10 +36,6 @@ export default function DashboardTab({
     return () => clearTimeout(timer);
   }, []);
 
-  // Delete warning states
-  const [isDeleteWarningOpen, setIsDeleteWarningOpen] = useState(false);
-  const [idsToDelete, setIdsToDelete] = useState<string[]>([]);
-
   // Filtered applicants
   const filteredApplicants = finalResults.filter((app) => {
     const matchesSearch =
@@ -59,19 +51,6 @@ export default function DashboardTab({
     }
     return matchesSearch;
   });
-
-  // Trigger single delete
-  const triggerSingleDelete = (id: string) => {
-    setIdsToDelete([id]);
-    setIsDeleteWarningOpen(true);
-  };
-
-  // Confirm delete action
-  const handleConfirmDelete = () => {
-    onDeleteRows(idsToDelete);
-    setIsDeleteWarningOpen(false);
-    setIdsToDelete([]);
-  };
 
   if (loading) {
     return (
@@ -253,13 +232,6 @@ export default function DashboardTab({
                           >
                             <Download className="h-4 w-4 cursor-pointer" />
                           </button>
-                          <button
-                            onClick={() => triggerSingleDelete(app.id)}
-                            className="p-1.5 text-red-550 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-950/20 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4 cursor-pointer" />
-                          </button>
                         </div>
                       </td>
 
@@ -344,53 +316,6 @@ export default function DashboardTab({
         </div>
       </div>
 
-      {/* Delete Confirmation Warning Box */}
-      {isDeleteWarningOpen && (
-        <div
-          id="delete-warning-overlay"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
-        >
-          <div
-            id="delete-warning-modal"
-            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900"
-          >
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  Confirm Deletion of Record
-                </h3>
-                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Are you absolutely sure you want to delete this applicant response entry?
-                  This action is irreversible and will remove all scores, psychometric reports, and metadata from active state memory.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-2.5 text-xs">
-              <button
-                id="cancel-delete-btn"
-                onClick={() => {
-                  setIsDeleteWarningOpen(false);
-                  setIdsToDelete([]);
-                }}
-                className="rounded-lg bg-white px-4 py-2 font-medium text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                id="confirm-delete-btn"
-                onClick={handleConfirmDelete}
-                className="rounded-lg bg-red-600 px-4.5 py-2 font-semibold text-white hover:bg-red-500 shadow-xs transition-colors cursor-pointer"
-              >
-                Permanently Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

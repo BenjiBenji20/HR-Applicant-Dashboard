@@ -1,15 +1,5 @@
-import express from "express";
-import path from "path";
-import dotenv from "dotenv";
-import { createServer as createViteServer } from "vite";
+import { Request, Response } from "express";
 import { GoogleGenAI, Type } from "@google/genai";
-
-dotenv.config();
-
-const app = express();
-const PORT = 3000;
-
-app.use(express.json());
 
 let aiClient: any = null;
 function getAI() {
@@ -30,7 +20,7 @@ function getAI() {
   return aiClient;
 }
 
-// Endpoint to generate psychometric analysis
+// Structured JSON output schema to ensure deterministic response structure
 const responseSchema = {
   type: Type.OBJECT,
   properties: {
@@ -69,11 +59,26 @@ const responseSchema = {
   ]
 };
 
-app.post("/api/generate-psychometric", async (req, res) => {
+export default async function handler(req: Request, res: Response) {
+  // Allow cross-origin requests for local testing if needed
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
   try {
     const action = req.query.action;
 
-    // SECURE PROXY SAVE HANDLER FOR LOCAL DEV
+    // =========================================================================
+    // SECURE PROXY SAVE HANDLER
+    // =========================================================================
     if (action === "save") {
       const gasUrl = process.env.GAS_WEB_APP_URL;
       const gasSecret = process.env.GAS_SECRET || "csi-hr-portal-secure-token-2026";
@@ -82,6 +87,7 @@ app.post("/api/generate-psychometric", async (req, res) => {
         return res.status(500).json({ error: "GAS_WEB_APP_URL environment variable is not configured on the server." });
       }
 
+      // Forward request securely from server-to-sheet (secret key is appended on the server)
       const targetUrl = `${gasUrl}?secret=${gasSecret}&action=save_ai_assessment`;
       
       const response = await fetch(targetUrl, {
@@ -98,6 +104,9 @@ app.post("/api/generate-psychometric", async (req, res) => {
       return res.status(200).json(result);
     }
 
+    // =========================================================================
+    // GEMINI REPORT GENERATION STREAM HANDLER
+    // =========================================================================
     const { applicant, details } = req.body;
     if (!applicant) {
       return res.status(400).json({ error: "Applicant data is required" });
@@ -110,6 +119,8 @@ app.post("/api/generate-psychometric", async (req, res) => {
     const supervisory = details?.supervisory || {};
 
     const ai = getAI();
+
+    // Fallback if Gemini API key is missing
     if (!ai) {
       res.setHeader("Content-Type", "application/json; charset=utf-8");
       const fallback = {
@@ -120,10 +131,12 @@ app.post("/api/generate-psychometric", async (req, res) => {
         index4Assessment: supervisoryTest ? `Possesses capabilities in human relations practices graded as ${supervisory.humanRelationsPractices}.` : "",
         aiGenPersonalityAssessment: `Personality evaluation shows emotional stability is ${pf16.emotionalStability || "Average"} and conscientiousness is ${pf16.conscientiousness || "Average"}. The candidate displays an overall balanced profile suitable for the ${position} role.`
       };
+      
       await new Promise(resolve => setTimeout(resolve, 800));
       return res.status(200).json(fallback);
     }
 
+    // Augmentation Prompt (excluding Candidate personal info)
     const prompt = `
 Generate a professional psychometric evaluation summary.
 Position applied for: ${position}
@@ -168,7 +181,7 @@ Output constraints:
 `;
 
     const responseStream = await ai.models.generateContentStream({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         systemInstruction: "You are an expert Industrial-Organizational Psychologist conducting professional candidate evaluations. Output must match the requested JSON schema exactly.",
@@ -185,83 +198,12 @@ Output constraints:
         res.write(chunk.text);
       }
     }
+    
     res.end();
   } catch (error: any) {
-    console.error("Gemini API error:", error);
+    console.error("Vercel Serverless function error:", error);
     if (!res.headersSent) {
       res.status(500).json({ error: error.message || "Failed to generate psychometric evaluation stream" });
     }
   }
-});
-
-app.all("/api/applicants", async (req, res) => {
-  const gasUrl = process.env.GAS_WEB_APP_URL;
-  const gasSecret = process.env.GAS_SECRET || "csi-hr-portal-secure-token-2026";
-
-  if (!gasUrl) {
-    return res.status(500).json({ error: "GAS_WEB_APP_URL environment variable is not configured on the server." });
-  }
-
-  try {
-    if (req.method === "GET") {
-      const queryParams = new URLSearchParams(req.query as any);
-      queryParams.set("secret", gasSecret);
-      
-      const targetUrl = `${gasUrl}?${queryParams.toString()}`;
-      const response = await fetch(targetUrl, { method: "GET" });
-
-      if (!response.ok) {
-        throw new Error(`Google Apps Script responded with HTTP error status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return res.status(200).json(result);
-    }
-
-    if (req.method === "POST") {
-      const action = req.query.action || req.body.action || "";
-      const targetUrl = `${gasUrl}?secret=${gasSecret}&action=${action}`;
-
-      const response = await fetch(targetUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(req.body),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Google Apps Script responded with HTTP error status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return res.status(200).json(result);
-    }
-
-    return res.status(405).json({ error: "HTTP Method Not Supported" });
-  } catch (error: any) {
-    console.error("Local proxy handler error:", error);
-    return res.status(500).json({ error: error.message || "Failed to contact Google Apps Script database" });
-  }
-});
-
-// Serve assets / Vite middleware
-async function setupServer() {
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`);
-  });
 }
-
-setupServer();
