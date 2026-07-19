@@ -58,7 +58,10 @@ function doGet(e) {
       return respondJson({ success: false, error: "Unauthorized" }, 401);
     }
     
-    var action = e.parameter.action || "list";
+    var action = e.parameter.action;
+    if (!action) {
+      action = e.parameter.id ? "get" : "list";
+    }
     
     if (action === "list") {
       return handleList(e);
