@@ -97,8 +97,7 @@ export const initialDetailedProfiles: Record<string, ApplicantDetail> = {
       "16pfTestTime": {
         test1: { consumedTime: "4m 10s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 },
         test2: { consumedTime: "5m 25s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 },
-        test3: { consumedTime: "6m 12s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 },
-        test4: { consumedTime: "4m 50s", timeFrame: "10 mins", testAnswered: 1, testItem: 50 }
+        test3: { consumedTime: "6m 12s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 }
       },
       supervTestTime: {
         test1: { consumedTime: "14m 15s", timeFrame: "25 mins", testAnswered: 1, testItem: 60 }
@@ -152,8 +151,7 @@ export const initialDetailedProfiles: Record<string, ApplicantDetail> = {
       "16pfTestTime": {
         test1: { consumedTime: "3m 50s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 },
         test2: { consumedTime: "4m 55s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 },
-        test3: { consumedTime: "5m 30s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 },
-        test4: { consumedTime: "4m 15s", timeFrame: "10 mins", testAnswered: 1, testItem: 50 }
+        test3: { consumedTime: "5m 30s", timeFrame: "8 mins", testAnswered: 1, testItem: 45 }
       },
       supervTestTime: {
         test1: { consumedTime: "12m 45s", timeFrame: "25 mins", testAnswered: 1, testItem: 60 }

@@ -110,7 +110,7 @@ export interface AllTestTimeConsumed {
     test1: TestTime
   },
   "16pfTestTime"?: {
-    test1: TestTime, test2: TestTime, test3: TestTime, test4: TestTime
+    test1: TestTime, test2: TestTime, test3: TestTime
   },
   supervTestTime?: {
     test1: TestTime
