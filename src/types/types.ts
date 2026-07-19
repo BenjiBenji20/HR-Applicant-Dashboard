@@ -16,7 +16,7 @@ export interface SharedMetadata {
   supervisoryTest: boolean; // Yes | No
   emailAddress: string;
   fullName: string;
-  age: number;
+  age: number | string; // posible received a number or string ([No Answer])
   education: string;
   contactNumber: string;
 }
