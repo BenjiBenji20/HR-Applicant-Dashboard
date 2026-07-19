@@ -262,19 +262,31 @@ function handleGet(e) {
  * and deletes all matching rows. This preserves relational integrity when using XLOOKUP.
  */
 function deleteApplicantFromAllSheets(id) {
+  // Defensive validation: Ensure the ID is a valid non-empty string and not a short or invalid key
+  if (!id || typeof id !== "string" || id.trim() === "" || id.length < 10) {
+    return 0;
+  }
+  
   var spreadsheet = getSpreadsheet();
   var sheets = spreadsheet.getSheets();
   var deletedCount = 0;
   
   for (var i = 0; i < sheets.length; i++) {
     var sheet = sheets[i];
-    var finder = sheet.createTextFinder(id);
+    
+    // 1. Search cell VALUES only (not formula texts)
+    // 2. Match the ENTIRE cell contents exactly (prevents partial matches)
+    var finder = sheet.createTextFinder(id)
+      .matchEntireCell(true)
+      .matchFormulaText(false);
+      
     var ranges = finder.findAll();
     var rowsToDelete = [];
     
     for (var j = 0; j < ranges.length; j++) {
       var row = ranges[j].getRow();
-      if (rowsToDelete.indexOf(row) === -1) {
+      // Defensive check: Do not delete header rows
+      if (row >= START_ROW && rowsToDelete.indexOf(row) === -1) {
         rowsToDelete.push(row);
       }
     }
