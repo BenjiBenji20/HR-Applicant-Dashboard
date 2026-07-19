@@ -82,12 +82,9 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
               <Brain className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 Detailed Applicant Psychometric Profile
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor}
-              </p>
             </div>
           </div>
           <button
@@ -101,8 +98,12 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
 
         {/* Modal Body */}
         <div className="mt-6 space-y-6">
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            Applicant: {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor}
+          </h2>
+
           {/* Metadata Block */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-950/60 text-xs border border-slate-100/50 dark:border-slate-850/50">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-950/60 text-xs">
             <div>
               <span className="text-slate-450 dark:text-slate-500 block mb-0.5 font-medium">Email Address</span>
               <p className="font-semibold text-slate-800 dark:text-slate-200">{summary.metadata.emailAddress}</p>
@@ -140,15 +141,15 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
               1. Cognitive Performance Profile
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="rounded-lg bg-white/70 dark:bg-slate-950/40 p-3.5 shadow-2xs border border-slate-100/50 dark:border-slate-850/30">
+              <div className="rounded-lg bg-white/70 dark:bg-slate-950/40 p-3.5 shadow-2xs">
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 block mb-1 uppercase tracking-wider font-bold">CFIT Fluid Intelligence</span>
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-50">{summary.scores.cfit}</p>
               </div>
-              <div className="rounded-lg bg-white/70 dark:bg-slate-950/40 p-3.5 shadow-2xs border border-slate-100/50 dark:border-slate-850/30">
+              <div className="rounded-lg bg-white/70 dark:bg-slate-950/40 p-3.5 shadow-2xs">
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 block mb-1 uppercase tracking-wider font-bold">Verbal Comprehension</span>
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-50">{summary.scores.comprehension}</p>
               </div>
-              <div className="rounded-lg bg-white/70 dark:bg-slate-950/40 p-3.5 shadow-2xs border border-slate-100/50 dark:border-slate-850/30">
+              <div className="rounded-lg bg-white/70 dark:bg-slate-950/40 p-3.5 shadow-2xs">
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 block mb-1 uppercase tracking-wider font-bold">Planning & Organization</span>
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-50">{summary.scores.planning}</p>
               </div>
@@ -162,7 +163,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
                 <Cpu className="h-4 w-4 text-purple-500" />
                 2. Detailed Personality Profile (16PF Table)
               </h4>
-              
+
               {/* 16PF detailed tables split into 2 grids */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left 6 Dimensions */}
@@ -249,7 +250,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
                     <FileText className="h-4 w-4 text-indigo-500" />
                     Narrative Psychological Assessment
                   </h5>
-                  <div className="max-h-32 overflow-y-auto text-xs text-slate-700 dark:text-slate-400 bg-indigo-50/15 p-4 rounded-xl leading-relaxed font-bold">
+                  <div className="max-h-32 overflow-y-auto text-xs text-slate-700 dark:text-slate-400 bg-indigo-50/1 p-4 rounded-xl leading-relaxed font-bold">
                     {detail.mentalAbility}
                   </div>
                 </div>
@@ -337,7 +338,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
                 <Brain className="h-4 w-4 text-purple-500" />
                 {personalitySectionNumber}. AI Generated Personality Assessment
               </h4>
-              <div className="max-h-32 overflow-y-auto text-xs text-slate-700 dark:text-slate-400 p-4 bg-slate-100/50 dark:bg-slate-900/50 rounded-xl leading-relaxed font-bold border border-slate-100/50 dark:border-slate-850/30">
+              <div className="max-h-32 overflow-y-auto text-xs text-slate-700 dark:text-slate-400 p-4 bg-slate-100/50 dark:bg-slate-900/50 rounded-xl leading-relaxed font-bold">
                 {detail.aiGenPersonalityAssessment}
               </div>
             </div>
