@@ -10,7 +10,8 @@ export const initialSummaryResults: ApplicantSummary[] = [
       fullName: "John Doe",
       age: 28,
       education: "Bachelor of Science in Information Technology",
-      contactNumber: "+1 (555) 019-2834"
+      contactNumber: "+1 (555) 019-2834",
+      company: "CSI"
     },
     intent: {
       positionAppliedFor: "Senior Software Engineer",
@@ -32,7 +33,8 @@ export const initialSummaryResults: ApplicantSummary[] = [
       fullName: "Sarah Jenkins",
       age: 34,
       education: "Master of Science in Human Resource Management",
-      contactNumber: "+1 (555) 014-9876"
+      contactNumber: "+1 (555) 014-9876",
+      company: "CSI"
     },
     intent: {
       positionAppliedFor: "HR Specialist",

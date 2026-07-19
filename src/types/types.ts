@@ -19,6 +19,7 @@ export interface SharedMetadata {
   age: number | string; // posible received a number or string ([No Answer])
   education: string;
   contactNumber: string;
+  company?: string;
 }
 
 export interface SharedIntent {

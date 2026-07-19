@@ -269,7 +269,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
               {/* Grid with 4 competencies layout */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Management */}
-                <div className="rounded-xl bg-white/70 dark:bg-slate-950/40 p-4 border border-slate-100/50 dark:border-slate-850/30 space-y-2">
+                <div className="rounded-xl bg-white/70 dark:bg-slate-950/40 p-4 space-y-2">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Management</span>
                   <p className="text-slate-655 dark:text-slate-400 text-xs italic font-medium leading-relaxed">
                     "{detail.supervisoryIndexesAI.index1Assessment}"
@@ -281,7 +281,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
                 </div>
 
                 {/* Supervision */}
-                <div className="rounded-xl bg-white/70 dark:bg-slate-950/40 p-4 border border-slate-100/50 dark:border-slate-850/30 space-y-2">
+                <div className="rounded-xl bg-white/70 dark:bg-slate-950/40 p-4 space-y-2">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Supervision</span>
                   <p className="text-slate-655 dark:text-slate-400 text-xs italic font-medium leading-relaxed">
                     "{detail.supervisoryIndexesAI.index2Assessment}"
@@ -293,7 +293,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
                 </div>
 
                 {/* Employee Relations */}
-                <div className="rounded-xl bg-white/70 dark:bg-slate-950/40 p-4 border border-slate-100/50 dark:border-slate-850/30 space-y-2">
+                <div className="rounded-xl bg-white/70 dark:bg-slate-950/40 p-4 space-y-2">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Employee Relations</span>
                   <p className="text-slate-655 dark:text-slate-400 text-xs italic font-medium leading-relaxed">
                     "{detail.supervisoryIndexesAI.index3Assessment}"
@@ -305,7 +305,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
                 </div>
 
                 {/* Human Relations Practices */}
-                <div className="rounded-xl bg-white/70 dark:bg-slate-950/40 p-4 border border-slate-100/50 dark:border-slate-850/30 space-y-2">
+                <div className="rounded-xl bg-white/70 dark:bg-slate-950/40 p-4 space-y-2">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Human Relations Practices</span>
                   <p className="text-slate-655 dark:text-slate-400 text-xs italic font-medium leading-relaxed">
                     "{detail.supervisoryIndexesAI.index4Assessment}"
