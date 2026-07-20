@@ -59,12 +59,12 @@ function doGet(e) {
     if (!checkAuth(e)) {
       return respondJson({ success: false, error: "Unauthorized" }, 401);
     }
-    
+
     var action = e.parameter.action;
     if (!action) {
       action = e.parameter.id ? "get" : "list";
     }
-    
+
     if (action === "list") {
       return handleList(e);
     } else if (action === "get") {
@@ -90,7 +90,7 @@ function doPost(e) {
     if (!checkAuth(e)) {
       return respondJson({ success: false, error: "Unauthorized" }, 401);
     }
-    
+
     var action = e.parameter.action;
     var body = {};
     if (e.postData && e.postData.contents) {
@@ -100,9 +100,9 @@ function doPost(e) {
         // Fallback or ignore body parse error
       }
     }
-    
+
     action = action || body.action;
-    
+
     if (action === "delete") {
       var id = e.parameter.id || body.id;
       if (!id) {
@@ -148,30 +148,30 @@ function handleList(e) {
   if (!sheet) {
     return respondJson({ success: false, error: "Sheet '" + TAB_NAME + "' not found" }, 404);
   }
-  
+
   var values = sheet.getDataRange().getValues();
   if (values.length < START_ROW) {
-    return respondJson({ 
-      success: true, 
-      data: [], 
-      details: {}, 
-      pagination: { page: 1, limit: 20, totalCount: 0, totalPages: 0 } 
+    return respondJson({
+      success: true,
+      data: [],
+      details: {},
+      pagination: { page: 1, limit: 20, totalCount: 0, totalPages: 0 }
     });
   }
-  
+
   var dataRows = values.slice(START_ROW - 1);
-  
+
   // Filter out invalid/empty rows (ensure ID exists and is not a formula error like #REF!, #N/A, etc.)
-  dataRows = dataRows.filter(function(row) {
+  dataRows = dataRows.filter(function (row) {
     var id = row[1] ? String(row[1]).trim() : "";
     return id !== "" && id.indexOf("#") !== 0;
   });
-  
+
   // Search filter
   var search = e.parameter.search;
   if (search) {
     var q = String(search).toLowerCase().trim();
-    dataRows = dataRows.filter(function(row) {
+    dataRows = dataRows.filter(function (row) {
       var id = parseString(row[1]).toLowerCase();
       var email = parseString(row[3]).toLowerCase();
       var name = parseString(row[4]).toLowerCase();
@@ -179,31 +179,31 @@ function handleList(e) {
       return id.indexOf(q) !== -1 || email.indexOf(q) !== -1 || name.indexOf(q) !== -1 || position.indexOf(q) !== -1;
     });
   }
-  
+
   // Supervisory filter
   var supervisory = e.parameter.supervisory;
   if (supervisory !== undefined && supervisory !== null && supervisory !== "") {
     var targetSupervisory = parseBoolean(supervisory);
-    dataRows = dataRows.filter(function(row) {
+    dataRows = dataRows.filter(function (row) {
       return parseBoolean(row[2]) === targetSupervisory;
     });
   }
-  
+
   // Pagination
   var page = parseInt(e.parameter.page || "1", 10);
   var limit = parseInt(e.parameter.limit || "20", 10);
   if (isNaN(page) || page < 1) page = 1;
   if (isNaN(limit) || limit < 1) limit = 20;
-  
+
   var totalCount = dataRows.length;
   var totalPages = Math.ceil(totalCount / limit);
   var startIndex = (page - 1) * limit;
   var endIndex = startIndex + limit;
   var paginatedRows = dataRows.slice(startIndex, endIndex);
-  
+
   var summaries = [];
   var details = {};
-  
+
   for (var i = 0; i < paginatedRows.length; i++) {
     var mapped = mapRowToApplicant(paginatedRows[i]);
     if (mapped) {
@@ -211,7 +211,7 @@ function handleList(e) {
       details[mapped.detail.id] = mapped.detail;
     }
   }
-  
+
   return respondJson({
     success: true,
     data: summaries,
@@ -233,18 +233,18 @@ function handleGet(e) {
   if (!id) {
     return respondJson({ success: false, error: "Missing applicant ID" }, 400);
   }
-  
+
   var spreadsheet = getSpreadsheet();
   var sheet = spreadsheet.getSheetByName(TAB_NAME);
   if (!sheet) {
     return respondJson({ success: false, error: "Sheet '" + TAB_NAME + "' not found" }, 404);
   }
-  
+
   var values = sheet.getDataRange().getValues();
   if (values.length < START_ROW) {
     return respondJson({ success: false, error: "Applicant not found" }, 404);
   }
-  
+
   var dataRows = values.slice(START_ROW - 1);
   for (var i = 0; i < dataRows.length; i++) {
     var row = dataRows[i];
@@ -259,7 +259,7 @@ function handleGet(e) {
       }
     }
   }
-  
+
   return respondJson({ success: false, error: "Applicant not found" }, 404);
 }
 
@@ -276,23 +276,23 @@ function deleteApplicantFromAllSheets(id) {
   if (!id || typeof id !== "string" || id.trim() === "" || id.length < 10) {
     return 0;
   }
-  
+
   var spreadsheet = getSpreadsheet();
   var sheets = spreadsheet.getSheets();
   var deletedCount = 0;
-  
+
   for (var i = 0; i < sheets.length; i++) {
     var sheet = sheets[i];
-    
+
     // 1. Search cell VALUES only (not formula texts)
     // 2. Match the ENTIRE cell contents exactly (prevents partial matches)
     var finder = sheet.createTextFinder(id)
       .matchEntireCell(true)
       .matchFormulaText(false);
-      
+
     var ranges = finder.findAll();
     var rowsToDelete = [];
-    
+
     for (var j = 0; j < ranges.length; j++) {
       var row = ranges[j].getRow();
       // Defensive check: Do not delete header rows
@@ -300,9 +300,9 @@ function deleteApplicantFromAllSheets(id) {
         rowsToDelete.push(row);
       }
     }
-    
+
     // Sort in descending order to avoid shift issues during deletion
-    rowsToDelete.sort(function(a, b) { return b - a; });
+    rowsToDelete.sort(function (a, b) { return b - a; });
     for (var k = 0; k < rowsToDelete.length; k++) {
       sheet.deleteRow(rowsToDelete[k]);
       deletedCount++;
@@ -322,10 +322,10 @@ function verifyCredentials(username, password) {
   if (!sheet) {
     return false; // Ready but returns false if not initialized yet
   }
-  
+
   var values = sheet.getDataRange().getValues();
   if (values.length < 2) return false;
-  
+
   var headers = values[0];
   var userCol = -1;
   var passCol = -1;
@@ -334,16 +334,16 @@ function verifyCredentials(username, password) {
     if (h === "username" || h === "email") userCol = i;
     if (h === "password" || h === "pass") passCol = i;
   }
-  
+
   if (userCol === -1 || passCol === -1) return false;
-  
+
   username = String(username).toLowerCase().trim();
   password = String(password);
-  
+
   for (var rowIdx = 1; rowIdx < values.length; rowIdx++) {
     var dbUser = String(values[rowIdx][userCol]).toLowerCase().trim();
     var dbPass = String(values[rowIdx][passCol]);
-    
+
     if (dbUser === username) {
       if (dbPass === password || hashPassword(password) === dbPass) {
         return true;
@@ -374,11 +374,11 @@ function hashPassword(password) {
  */
 function checkAuth(e) {
   var token = null;
-  
+
   if (e && e.parameter) {
     token = e.parameter.secret || e.parameter.key || e.parameter.apiKey;
   }
-  
+
   if (!token && e && e.postData && e.postData.contents) {
     try {
       var body = JSON.parse(e.postData.contents);
@@ -387,7 +387,7 @@ function checkAuth(e) {
       // ignore
     }
   }
-  
+
   var configuredSecret = SECRET_KEY;
   try {
     var propSecret = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_SECRET");
@@ -397,7 +397,7 @@ function checkAuth(e) {
   } catch (err) {
     // Ignore properties service errors
   }
-  
+
   return token === configuredSecret;
 }
 
@@ -423,7 +423,7 @@ function respondJson(data, statusCode) {
   } else {
     data.status = data.success === false ? 400 : 200;
   }
-  
+
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }
@@ -470,7 +470,7 @@ function parseDateTimeString(val) {
 function parseClassification(val) {
   var str = parseString(val);
   if (!str) return "N/A";
-  
+
   var lower = str.toLowerCase();
   for (var i = 0; i < classifications.length; i++) {
     if (classifications[i].toLowerCase() === lower) {
@@ -486,7 +486,7 @@ function parseClassification(val) {
 function mapRowToApplicant(row) {
   var id = parseString(row[1]);
   if (!id) return null;
-  
+
   var timestamp = parseDateTimeString(row[0]);
   var supervisoryTest = parseBoolean(row[2]);
   var emailAddress = parseString(row[3]);
@@ -494,17 +494,17 @@ function mapRowToApplicant(row) {
   var age = parseNumber(row[5]);
   var education = parseString(row[6]);
   var contactNumber = parseString(row[7]);
-  var company = parseString(row[10]) || "CSI";
-  
+  var company = parseString(row[10]) || "No Company Yet";
+
   var positionAppliedFor = parseString(row[8]);
   var date = parseDateString(row[9]);
-  
+
   // scores
   var cfit = parseClassification(row[11]);
   var comprehension = parseClassification(row[12]);
   var planning = parseClassification(row[13]);
   var supervisoryTotalEvaluation = parseClassification(row[30]);
-  
+
   // summary data structure
   var summary = {
     id: id,
@@ -529,7 +529,7 @@ function mapRowToApplicant(row) {
       supervisoryTotalEvaluation: supervisoryTotalEvaluation
     }
   };
-  
+
   // detailed16pf (O to Z)
   var detailed16pf = {
     emotionalStability: parseClassification(row[14]),
@@ -545,7 +545,7 @@ function mapRowToApplicant(row) {
     objectivity: parseClassification(row[24]),
     optimismLiveliness: parseClassification(row[25])
   };
-  
+
   // supervisory detailed (AA to AD)
   var supervisory = {
     management: parseClassification(row[26]),
@@ -553,7 +553,7 @@ function mapRowToApplicant(row) {
     employeeRelations: parseClassification(row[28]),
     humanRelationsPractices: parseClassification(row[29])
   };
-  
+
   // supervisory indexes AI (AG to AJ)
   var supervisoryIndexesAI = {
     index1Assessment: parseString(row[32]),
@@ -561,7 +561,7 @@ function mapRowToApplicant(row) {
     index3Assessment: parseString(row[34]),
     index4Assessment: parseString(row[35])
   };
-  
+
   // time consumed parsing (AM to BZ)
   var allTestTimeConsumed = {
     cfitTestTime: {
@@ -585,7 +585,7 @@ function mapRowToApplicant(row) {
       test1: { consumedTime: parseString(row[74]), timeFrame: parseString(row[75]), testAnswered: parseNumber(row[76]), testItem: parseNumber(row[77]) }
     } : null
   };
-  
+
   // detail data structure
   var detail = {
     id: id,
@@ -597,7 +597,7 @@ function mapRowToApplicant(row) {
     aiGenPersonalityAssessment: parseString(row[37]),
     allTestTimeConsumed: allTestTimeConsumed
   };
-  
+
   return {
     summary: summary,
     detail: detail

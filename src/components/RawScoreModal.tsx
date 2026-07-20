@@ -99,7 +99,7 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
         {/* Modal Body */}
         <div className="mt-6 space-y-6">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-            Applicant: {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor}
+            Applicant: {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor} Company: {summary.metadata.company || "No Company Yet"}
           </h2>
 
           {/* Metadata Block */}
