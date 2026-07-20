@@ -69,6 +69,8 @@ function doGet(e) {
       return handleList(e);
     } else if (action === "get") {
       return handleGet(e);
+    } else if (action === "analytics" || action === "analytics_summary") {
+      return handleAnalytics(e);
     } else {
       return respondJson({ success: false, error: "Unknown action: " + action }, 400);
     }

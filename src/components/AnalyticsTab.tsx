@@ -182,13 +182,29 @@ function mapResultsToSummary(results: ApplicantFinalResult[]): AnalyticsSummary 
 export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeModalCard, setActiveModalCard] = useState<string | null>(null);
+  const [apiSummary, setApiSummary] = useState<AnalyticsSummary | null>(null);
 
-  // Initial loading skeleton state of 800ms
+  const fetchAnalyticsData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/analytics");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          setApiSummary(json.data);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to fetch analytics from API proxy:", err);
+    }
+    setLoading(false);
+  };
+
+  // Initial loading & analytics API call
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
+    fetchAnalyticsData();
   }, []);
 
   // Handle closing modal when Esc key is pressed
@@ -203,13 +219,10 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
   }, []);
 
   const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 800);
+    fetchAnalyticsData();
   };
 
-  const summary = mapResultsToSummary(finalResults);
+  const summary = apiSummary || mapResultsToSummary(finalResults);
 
   // Computations for small KPI cards
   const testCompletionPercent = summary.totalApplicants > 0
@@ -338,7 +351,7 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
               <BarChart data={summary.applyCountByPosition} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-900" />
                 <XAxis dataKey="label" tickLine={false} axisLine={false} stroke="#64748b" tick={{ fontSize: 10 }} />
-                <YAxis tickLine={false} axisLine={false} stroke="#64748b" tick={{ fontSize: 10 }} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} stroke="#64748b" tick={{ fontSize: 10 }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#0f172a",
@@ -451,7 +464,7 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
               <BarChart data={summary.interviews.byPosition} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-900" />
                 <XAxis dataKey="label" tickLine={false} axisLine={false} stroke="#64748b" tick={{ fontSize: 10 }} />
-                <YAxis tickLine={false} axisLine={false} stroke="#64748b" tick={{ fontSize: 10 }} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} stroke="#64748b" tick={{ fontSize: 10 }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#0f172a",
