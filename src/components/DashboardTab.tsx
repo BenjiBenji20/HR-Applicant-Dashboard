@@ -6,9 +6,19 @@ import {
   Printer,
   Download,
   Eye,
-  Database
+  Database,
+  Plus,
+  Loader2,
+  Building2
 } from "lucide-react";
 import { ApplicantSummary } from "../types/types";
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+}
 
 interface DashboardTabProps {
   finalResults: ApplicantSummary[];
@@ -16,6 +26,9 @@ interface DashboardTabProps {
   onOpenAIModal: (applicant: ApplicantSummary) => void;
   onOpenRawScores: (id: string) => void;
   onPrintApplicant: (applicant: ApplicantSummary) => void;
+  pagination?: PaginationInfo;
+  onFetchMoreRecords?: (requestedLimit: number) => void;
+  isLoadingMore?: boolean;
 }
 
 export default function DashboardTab({
@@ -24,6 +37,9 @@ export default function DashboardTab({
   onOpenAIModal,
   onOpenRawScores,
   onPrintApplicant,
+  pagination,
+  onFetchMoreRecords,
+  isLoadingMore = false,
 }: DashboardTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTrack, setFilterTrack] = useState<"all" | "supervisory" | "standard">("all");
@@ -36,12 +52,14 @@ export default function DashboardTab({
     return () => clearTimeout(timer);
   }, []);
 
-  // Filtered applicants
+  // Search by ID & Position & Name & Email
   const filteredApplicants = finalResults.filter((app) => {
     const matchesSearch =
+      app.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.metadata.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.metadata.emailAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.intent.positionAppliedFor.toLowerCase().includes(searchTerm.toLowerCase());
+      app.intent.positionAppliedFor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (app.metadata.company && app.metadata.company.toLowerCase().includes(searchTerm.toLowerCase()));
 
     if (filterTrack === "supervisory") {
       return matchesSearch && app.metadata.supervisoryTest;
@@ -51,6 +69,14 @@ export default function DashboardTab({
     }
     return matchesSearch;
   });
+
+  const currentPage = pagination?.page || 1;
+  const loadedCount = finalResults.length;
+  const totalCount = pagination?.totalCount ?? finalResults.length;
+  const limit = pagination?.limit || 20;
+
+  // Actual pagination context format: e.g. 1-6/6 or 1-20/50
+  const pageContextString = `${currentPage}-${loadedCount}/${totalCount}`;
 
   if (loading) {
     return (
@@ -150,7 +176,7 @@ export default function DashboardTab({
           <div className="relative flex-1 md:w-64">
             <input
               type="text"
-              placeholder="Search applicants..."
+              placeholder="Search by ID, position, name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-slate-100"
@@ -174,7 +200,7 @@ export default function DashboardTab({
       </div>
 
       {/* Main Table Container (scrollable-xy table) */}
-      <div className="bg-white rounded-xl shadow-xs overflow-hidden flex flex-col transition-all duration-200 dark:bg-slate-950">
+      <div className="bg-white rounded-xl shadow-xs overflow-hidden flex flex-col transition-all duration-200 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
         <div className="overflow-x-auto w-full">
           <table className="w-full border-collapse text-left text-xs text-slate-600 dark:text-slate-400">
             <thead className="bg-slate-50 dark:bg-slate-900 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -183,6 +209,7 @@ export default function DashboardTab({
                 <th className="p-4 w-24 min-w-[90px] whitespace-nowrap">ID</th>
                 <th className="p-4 w-28 min-w-[110px] whitespace-nowrap">Date</th>
                 <th className="p-4 w-40 min-w-[160px] whitespace-nowrap">Full Name</th>
+                <th className="p-4 w-44 min-w-[170px] whitespace-nowrap">Company</th>
                 <th className="p-4 w-56 min-w-[220px] whitespace-nowrap">Email</th>
                 <th className="p-4 w-56 min-w-[220px] whitespace-nowrap">Position</th>
                 <th className="p-4 w-28 min-w-[110px] whitespace-nowrap">Supervisory</th>
@@ -246,8 +273,16 @@ export default function DashboardTab({
                       </td>
 
                       {/* Full Name */}
-                      <td className="p-4 w-40 min-w-[160px] whitespace-nowrap text-slate-900 dark:text-slate-400">
+                      <td className="p-4 w-40 min-w-[160px] whitespace-nowrap text-slate-900 dark:text-slate-400 font-semibold">
                         {app.metadata.fullName}
+                      </td>
+
+                      {/* Company */}
+                      <td className="p-4 w-44 min-w-[170px] whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
+                          <Building2 className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                          {app.metadata.company || "No Company Yet"}
+                        </span>
                       </td>
 
                       {/* Email */}
@@ -302,17 +337,51 @@ export default function DashboardTab({
                 })
               ) : (
                 <tr>
-                  <td colSpan={11} className="p-4 py-12 text-center text-slate-400 dark:text-slate-500">
+                  <td colSpan={12} className="p-4 py-12 text-center text-slate-400 dark:text-slate-500">
                     <Database className="h-8 w-8 mx-auto text-slate-300 dark:text-slate-700 mb-2.5" />
                     <p className="text-sm font-medium">No candidate responses found</p>
                     <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                      Try adjusting your search criteria or filter.
+                      Try searching by applicant ID or position.
                     </p>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Actual Pagination Context Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-900/60 p-4 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">
+              Page:
+            </span>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md font-mono font-bold text-xs bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30">
+              {pageContextString}
+            </span>
+          </div>
+
+          {onFetchMoreRecords && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onFetchMoreRecords(limit + 20)}
+                disabled={isLoadingMore || loadedCount >= totalCount}
+                className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold text-xs cursor-pointer transition-colors flex items-center gap-1.5"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Requesting...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-3.5 w-3.5" />
+                    Request Next 20 Records
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
-import DashboardTab from "./components/DashboardTab";
+import DashboardTab, { PaginationInfo } from "./components/DashboardTab";
 import AnalyticsTab from "./components/AnalyticsTab";
 import RawScoreModal from "./components/RawScoreModal";
 import AIPsychometricModal from "./components/AIPsychometricModal";
@@ -123,27 +123,59 @@ export default function App() {
     }
   });
 
+  const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>({
+    page: 1,
+    limit: 20,
+    totalCount: summaryResults.length,
+    totalPages: 1,
+  });
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   // Load live data from the proxy endpoint on mount with mock fallback
-  useEffect(() => {
-    async function fetchLiveRecords() {
-      try {
-        const response = await fetch("/api/applicants?action=list&page=1&limit=100");
-        if (!response.ok) {
-          throw new Error("HTTP error " + response.status);
-        }
-        const result = await response.json();
-        if (result.success && result.data) {
-          setSummaryResults(result.data);
-          if (result.details) {
-            setDetailedProfiles(result.details);
-          }
-        }
-      } catch (err) {
-        console.warn("Could not load database records from server proxy. Operating in local mock cache mode.", err);
+  const fetchLiveRecords = async (limit: number = 20) => {
+    try {
+      setIsLoadingMore(true);
+      const response = await fetch(`/api/applicants?action=list&page=1&limit=${limit}`);
+      if (!response.ok) {
+        throw new Error("HTTP error " + response.status);
       }
+      const result = await response.json();
+      if (result.success && result.data) {
+        setSummaryResults(result.data);
+        if (result.details) {
+          setDetailedProfiles(result.details);
+        }
+        if (result.pagination) {
+          setPaginationInfo(result.pagination);
+        } else {
+          setPaginationInfo({
+            page: 1,
+            limit: limit,
+            totalCount: result.data.length,
+            totalPages: 1,
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("Could not load database records from server proxy. Operating in local mock cache mode.", err);
+    } finally {
+      setIsLoadingMore(false);
     }
-    fetchLiveRecords();
+  };
+
+  useEffect(() => {
+    fetchLiveRecords(20);
   }, []);
+
+  const handleUpdateCompany = (applicantId: string, newCompany: string) => {
+    setSummaryResults((prev) =>
+      prev.map((app) =>
+        app.id === applicantId
+          ? { ...app, metadata: { ...app.metadata, company: newCompany } }
+          : app
+      )
+    );
+  };
 
   // Modal / Drawer Active States
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
@@ -357,6 +389,9 @@ export default function App() {
                 onOpenAIModal={handleOpenAIModal}
                 onOpenRawScores={handleOpenRawScores}
                 onPrintApplicant={handlePrintApplicant}
+                pagination={paginationInfo}
+                onFetchMoreRecords={fetchLiveRecords}
+                isLoadingMore={isLoadingMore}
               />
             ) : (
               <AnalyticsTab finalResults={analyticsResults} />
@@ -373,6 +408,7 @@ export default function App() {
           summary={summaryResults.find((r) => r.id === activeDetailId) || null}
           detail={detailedProfiles[activeDetailId] || null}
           onClose={() => setActiveDetailId(null)}
+          onUpdateCompany={handleUpdateCompany}
         />
       )}
 

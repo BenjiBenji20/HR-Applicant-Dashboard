@@ -126,12 +126,43 @@ function doPost(e) {
       }
       var success = saveAiAssessment(id, assessmentData);
       return respondJson({ success: success });
+    } else if (action === "edit_company" || action === "update_company") {
+      var id = body.id || e.parameter.id;
+      var company = body.company !== undefined ? body.company : e.parameter.company;
+      if (!id) {
+        return respondJson({ success: false, error: "Missing applicant ID" }, 400);
+      }
+      var success = updateApplicantCompany(id, company);
+      return respondJson({ success: success, company: company });
     } else {
       return respondJson({ success: false, error: "Unknown action: " + action }, 400);
     }
   } catch (err) {
     return respondJson({ success: false, error: err.toString() }, 500);
   }
+}
+
+/**
+ * Updates the company cell (Column K, 1-based index 11, range K3:K) for an applicant ID in sheet 'Final Result'.
+ */
+function updateApplicantCompany(id, company) {
+  if (!id) return false;
+  var spreadsheet = getSpreadsheet();
+  var sheet = spreadsheet.getSheetByName(TAB_NAME);
+  if (!sheet) return false;
+
+  var values = sheet.getDataRange().getValues();
+  if (values.length < START_ROW) return false;
+
+  for (var i = START_ROW - 1; i < values.length; i++) {
+    var rowId = parseString(values[i][1]); // Column B is ID
+    if (rowId === id) {
+      var sheetRowIndex = i + 1; // 1-based row index in Google Sheets
+      sheet.getRange(sheetRowIndex, 11).setValue(company);
+      return true;
+    }
+  }
+  return false;
 }
 
 // =========================================================================

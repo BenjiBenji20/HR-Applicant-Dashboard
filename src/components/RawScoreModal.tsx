@@ -1,26 +1,71 @@
-import React, { useEffect } from "react";
-import { X, Cpu, BarChart3, AlertCircle, Award, Brain, FileText, Timer } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { X, Cpu, BarChart3, AlertCircle, Award, Brain, FileText, Timer, Pencil, Save, Loader2 } from "lucide-react";
 import { ApplicantSummary, ApplicantDetail } from "../types/types";
 
 interface RawScoreModalProps {
   summary: ApplicantSummary | null;
   detail: ApplicantDetail | null;
   onClose: () => void;
+  onUpdateCompany?: (applicantId: string, newCompany: string) => void;
 }
 
-export default function RawScoreModal({ summary, detail, onClose }: RawScoreModalProps) {
+export default function RawScoreModal({ summary, detail, onClose, onUpdateCompany }: RawScoreModalProps) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [companyInput, setCompanyInput] = useState("");
+  const [companyValue, setCompanyValue] = useState(summary?.metadata.company || "");
+  const [isSavingCompany, setIsSavingCompany] = useState(false);
+  const [companyError, setCompanyError] = useState("");
+
+  // Keep local companyValue in sync with summary prop
+  useEffect(() => {
+    if (summary) {
+      setCompanyValue(summary.metadata.company || "");
+    }
+  }, [summary]);
+
   // Listen for Escape key to close modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        if (isEditModalOpen) {
+          setIsEditModalOpen(false);
+        } else {
+          onClose();
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, isEditModalOpen]);
 
   if (!summary) return null;
+
+  const handleSaveCompany = async () => {
+    if (!summary) return;
+    try {
+      setIsSavingCompany(true);
+      setCompanyError("");
+      const response = await fetch("/api/applicants?action=edit_company", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: summary.id, company: companyInput.trim() }),
+      });
+      const result = await response.json();
+      if (!response.ok || result.success === false) {
+        throw new Error(result.error || "Failed to update company");
+      }
+      const updated = companyInput.trim() || "No Company Yet";
+      setCompanyValue(updated);
+      if (onUpdateCompany) {
+        onUpdateCompany(summary.id, updated);
+      }
+      setIsEditModalOpen(false);
+    } catch (err: any) {
+      setCompanyError(err.message || "Error updating company");
+    } finally {
+      setIsSavingCompany(false);
+    }
+  };
 
   // Dynamic Section Numbering
   let sectionIdx = 3;
@@ -98,9 +143,43 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
 
         {/* Modal Body */}
         <div className="mt-6 space-y-6">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-            Applicant: {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor} Company: {summary.metadata.company || "No Company Yet"}
-          </h2>
+          {/* Top 2-Grid Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center bg-slate-50 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-100 dark:border-slate-800/60 text-xs">
+            {/* Grid 1: Full Name & Position (Kept together in one block) */}
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-0.5">
+                Applicant & Position
+              </span>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
+                Applicant: {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor}
+              </h2>
+            </div>
+
+            {/* Grid 2: Company + Edit Icon */}
+            <div className="flex items-center justify-between sm:justify-start gap-3 md:border-l border-slate-200 dark:border-slate-800 md:pl-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-0.5">
+                  Company
+                </span>
+                <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                  {companyValue || "No Company Yet"}
+                </p>
+              </div>
+              <button
+                id="edit-company-btn"
+                onClick={() => {
+                  setCompanyInput(companyValue || "");
+                  setIsEditModalOpen(true);
+                  setCompanyError("");
+                }}
+                className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-400 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+                title="Edit Company"
+              >
+                <Pencil className="h-3.5 w-3.5 cursor-pointer" />
+                <span>Edit</span>
+              </button>
+            </div>
+          </div>
 
           {/* Metadata Block */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-950/60 text-xs">
@@ -374,6 +453,91 @@ export default function RawScoreModal({ summary, detail, onClose }: RawScoreModa
           </button>
         </div>
       </div>
+
+      {/* Company Edit Pop-up Modal */}
+      {isEditModalOpen && (
+        <div
+          id="company-edit-modal-overlay"
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs transition-opacity duration-200"
+          onClick={() => !isSavingCompany && setIsEditModalOpen(false)}
+        >
+          <div
+            id="company-edit-modal-content"
+            className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Pencil className="h-4 w-4 text-indigo-500" />
+                Edit Company
+              </h3>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                disabled={isSavingCompany}
+                className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              <div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mb-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                  <span className="font-semibold block text-slate-700 dark:text-slate-300">
+                    {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor}
+                  </span>
+                  <span className="font-mono text-[10px]">ID: {summary.id}</span>
+                </div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  value={companyInput}
+                  onChange={(e) => setCompanyInput(e.target.value)}
+                  placeholder="Enter company name..."
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  disabled={isSavingCompany}
+                  autoFocus
+                />
+              </div>
+
+              {companyError && (
+                <p className="text-xs text-rose-500 font-medium">{companyError}</p>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  disabled={isSavingCompany}
+                  className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveCompany}
+                  disabled={isSavingCompany}
+                  className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 rounded-lg cursor-pointer transition-colors flex items-center gap-1.5"
+                >
+                  {isSavingCompany ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-3.5 w-3.5" />
+                      Save Company
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
