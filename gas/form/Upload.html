@@ -1,0 +1,571 @@
+<!-- Custom CSS Styles for Upload and Last Page Components -->
+<style>
+    .lang-tab-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #e0d7f5;
+        padding-bottom: 8px;
+    }
+
+    .lang-tab {
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #673ab7;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .lang-tab.active {
+        background: #673ab7;
+        color: #fff;
+    }
+
+    .lang-tab:hover:not(.active) {
+        background: #f3effe;
+    }
+
+    .download-link-btn {
+        display: inline-flex;
+        align-items: center;
+        background: #e8f0fe;
+        color: #1a73e8;
+        text-decoration: none;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        margin: 8px 0;
+        border: 1px solid #d2e3fc;
+        transition: background 0.2s;
+    }
+
+    .download-link-btn:hover {
+        background: #d2e3fc;
+    }
+
+    .instruction-text {
+        font-size: 14px;
+        color: #374151;
+        margin: 6px 0;
+        line-height: 1.5;
+    }
+
+    .upload-zone {
+        border: 2px dashed #b39ddb;
+        border-radius: 8px;
+        padding: 30px 20px;
+        text-align: center;
+        background: #faf8ff;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+        background: #f3effe;
+        border-color: #673ab7;
+    }
+
+    .upload-icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+    }
+
+    .upload-text {
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+    .file-preview-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border: 1.5px solid #d1c4e9;
+        background: #f8f6fc;
+        border-radius: 6px;
+        margin-top: 12px;
+    }
+
+    .file-icon {
+        font-size: 24px;
+    }
+
+    .file-info {
+        flex: 1;
+    }
+
+    .file-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #202124;
+        word-break: break-all;
+    }
+
+    .file-size {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 2px;
+    }
+
+    .remove-file-btn {
+        background: transparent;
+        border: none;
+        font-size: 18px;
+        color: #c62828;
+        cursor: pointer;
+        padding: 4px;
+        line-height: 1;
+    }
+
+    .custom-action-btn {
+        display: block;
+        width: 100%;
+        max-width: 280px;
+        margin: 20px 0 50px auto;
+        padding: 14px 28px;
+        background: #673ab7;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 3px 10px rgba(103, 58, 183, .35);
+        transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
+        text-align: center;
+    }
+
+    .custom-action-btn:hover {
+        background: #512da8;
+        box-shadow: 0 4px 14px rgba(103, 58, 183, .45);
+    }
+
+    .custom-action-btn:active {
+        transform: translateY(1px);
+    }
+
+    .custom-action-btn:disabled {
+        background: #9e9e9e;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .candidate-id-box {
+        display: flex;
+        align-items: center;
+        background: #f3f4f6;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin: 15px 0;
+        justify-content: space-between;
+    }
+
+    .candidate-id-text {
+        font-family: monospace;
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        user-select: all;
+        word-break: break-all;
+    }
+
+    .copy-btn {
+        background: #111827;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .copy-btn:hover {
+        background: #374151;
+    }
+
+    .copy-btn.copied {
+        background: #10b981;
+    }
+</style>
+
+<script>
+    var selectedFile = null;
+
+    /**
+     * Render the Employment Application Form upload page interface.
+     */
+    function renderApplicationUploadPage() {
+        // Hide standard dynamic quiz form
+        var df = document.getElementById("dynamic-form");
+        if (df) df.style.display = "none";
+
+        var uploadDiv = document.getElementById("custom-upload-container");
+        if (!uploadDiv) {
+            uploadDiv = document.createElement("div");
+            uploadDiv.id = "custom-upload-container";
+            var wrapper = document.getElementById("quiz-wrapper");
+            if (wrapper) wrapper.appendChild(uploadDiv);
+        }
+        uploadDiv.style.display = "block";
+
+        uploadDiv.innerHTML =
+            '<div class="quiz-card main-header-card" style="border-top: 8px solid #673ab7;">' +
+            '  <div class="main-title">Employment Application Form</div>' +
+            '  <div class="main-description">Please download and complete the Employment Application Form below, then upload it.</div>' +
+            '</div>' +
+            '' +
+            '<div class="lang-tab-bar">' +
+            '  <div class="lang-tab active" data-lang="en">English</div>' +
+            '  <div class="lang-tab" data-lang="tl">Tagalog</div>' +
+            '</div>' +
+            '' +
+            '<div class="lang-content" id="content-en">' +
+            '  <div class="quiz-card">' +
+            '    <div class="question-title">Instructions / Mga Instruksyon</div>' +
+            '    <p class="instruction-text">1. Download the Employment Application Form template using the link below:</p>' +
+            '    <a href="https://drive.google.com/uc?export=download&id=1n5h7Zrvsui6OYQpuf1wZiFUnwFOZ8fiB" class="download-link-btn">  Download Employment Application Form</a>' +
+            '      📥 Download Employment Application Form (PDF)' +
+            '    </a>' +
+            '    <p class="instruction-text" style="margin-top: 15px;">2. Fill out the application form completely.</p>' +
+            '    <p class="instruction-text">3. Upload your completed form here. We accept PDF, Word documents (doc, docx), and image formats (png, jpg, jpeg).</p>' +
+            '  </div>' +
+            '</div>' +
+            '' +
+            '<div class="lang-content" id="content-tl" style="display: none;">' +
+            '  <div class="quiz-card">' +
+            '    <div class="question-title">Mga Instruksyon / Instructions</div>' +
+            '    <p class="instruction-text">1. I-download ang template ng Employment Application Form sa link sa ibaba:</p>' +
+            '    <a href="https://drive.google.com/uc?export=download&id=1n5h7Zrvsui6OYQpuf1wZiFUnwFOZ8fiB" class="download-link-btn">  Download Employment Application Form</a>' +
+            '      📥 I-download ang Employment Application Form (PDF)' +
+            '    </a>' +
+            '    <p class="instruction-text" style="margin-top: 15px;">2. Punan nang buo ang application form.</p>' +
+            '    <p class="instruction-text">3. I-upload ang iyong natapos na form dito. Tumatanggap kami ng PDF, Word documents (doc, docx), at mga format ng larawan (png, jpg, jpeg).</p>' +
+            '  </div>' +
+            '</div>' +
+            '' +
+            '<div class="quiz-card">' +
+            '  <div class="question-title">Upload Completed Form / I-upload ang Natapos na Form <span class="required-asterisk">*</span></div>' +
+            '  <div class="upload-zone" id="drop-zone">' +
+            '    <div class="upload-icon">📁</div>' +
+            '    <div class="upload-text" id="upload-instruction-text">' +
+            '      Drag & Drop your file here or <span style="color:#673ab7; font-weight:600; text-decoration:underline;">Browse</span>' +
+            '    </div>' +
+            '    <input type="file" id="app-file-input" accept=".pdf,.doc,.docx,image/*" style="display: none;">' +
+            '  </div>' +
+            '  <div class="file-preview-card" id="file-preview" style="display: none;">' +
+            '    <span class="file-icon" id="preview-icon">📄</span>' +
+            '    <div class="file-info">' +
+            '      <div class="file-name" id="preview-name">filename.pdf</div>' +
+            '      <div class="file-size" id="preview-size">1.2 MB</div>' +
+            '    </div>' +
+            '    <button type="button" class="remove-file-btn" id="remove-file-btn">✕</button>' +
+            '  </div>' +
+            '  <div class="field-error" id="upload-error">Please choose a file to submit. / Mangyaring pumili ng file na isusumite.</div>' +
+            '</div>' +
+            '' +
+            '<button type="button" class="custom-action-btn" id="upload-submit-btn" disabled>Submit / Isumite</button>';
+
+        setupUploadEvents();
+    }
+
+    /**
+     * Attach events to the uploader buttons, drop zone, and language tabs.
+     */
+    function setupUploadEvents() {
+        var container = document.getElementById("custom-upload-container");
+        if (!container) return;
+
+        // Language tabs
+        var tabs = container.querySelectorAll(".lang-tab");
+        tabs.forEach(function (tab) {
+            tab.addEventListener("click", function () {
+                tabs.forEach(function (t) { t.classList.remove("active"); });
+                tab.classList.add("active");
+                var lang = tab.getAttribute("data-lang");
+                if (lang === "en") {
+                    document.getElementById("content-en").style.display = "block";
+                    document.getElementById("content-tl").style.display = "none";
+                } else {
+                    document.getElementById("content-en").style.display = "none";
+                    document.getElementById("content-tl").style.display = "block";
+                }
+            });
+        });
+
+        var dropZone = document.getElementById("drop-zone");
+        var fileInput = document.getElementById("app-file-input");
+        var filePreview = document.getElementById("file-preview");
+        var previewName = document.getElementById("preview-name");
+        var previewSize = document.getElementById("preview-size");
+        var previewIcon = document.getElementById("preview-icon");
+        var removeBtn = document.getElementById("remove-file-btn");
+        var submitBtn = document.getElementById("upload-submit-btn");
+        var uploadError = document.getElementById("upload-error");
+
+        function updatePreview(file) {
+            if (!file) {
+                selectedFile = null;
+                filePreview.style.display = "none";
+                dropZone.style.display = "block";
+                submitBtn.disabled = true;
+                return;
+            }
+
+            selectedFile = file;
+            previewName.textContent = file.name;
+
+            // Calculate human readable size
+            var sizeKb = file.size / 1024;
+            if (sizeKb > 1024) {
+                previewSize.textContent = (sizeKb / 1024).toFixed(2) + " MB";
+            } else {
+                previewSize.textContent = sizeKb.toFixed(1) + " KB";
+            }
+
+            // Icon formatting based on mime
+            if (file.type.indexOf("pdf") !== -1) {
+                previewIcon.textContent = "📕";
+            } else if (file.type.indexOf("word") !== -1 || file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
+                previewIcon.textContent = "📘";
+            } else if (file.type.indexOf("image") !== -1) {
+                previewIcon.textContent = "🖼️";
+            } else {
+                previewIcon.textContent = "📄";
+            }
+
+            filePreview.style.display = "flex";
+            dropZone.style.display = "none";
+            submitBtn.disabled = false;
+            uploadError.style.display = "none";
+        }
+
+        dropZone.addEventListener("click", function () {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function () {
+            if (fileInput.files.length > 0) {
+                updatePreview(fileInput.files[0]);
+            }
+        });
+
+        // Drag-and-drop support
+        dropZone.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            dropZone.classList.add("dragover");
+        });
+
+        dropZone.addEventListener("dragleave", function () {
+            dropZone.classList.remove("dragover");
+        });
+
+        dropZone.addEventListener("drop", function (e) {
+            e.preventDefault();
+            dropZone.classList.remove("dragover");
+            if (e.dataTransfer.files.length > 0) {
+                var file = e.dataTransfer.files[0];
+                // Basic type validation
+                var ext = file.name.split('.').pop().toLowerCase();
+                var allowed = ["pdf", "doc", "docx", "png", "jpg", "jpeg", "webp"];
+                if (allowed.indexOf(ext) !== -1 || file.type.indexOf("image") !== -1) {
+                    updatePreview(file);
+                } else {
+                    alert("Unsupported file type. Please upload a PDF, Word document, or image.");
+                }
+            }
+        });
+
+        removeBtn.addEventListener("click", function () {
+            fileInput.value = "";
+            updatePreview(null);
+        });
+
+        submitBtn.addEventListener("click", function () {
+            if (!selectedFile) {
+                uploadError.style.display = "block";
+                return;
+            }
+            submitApplicationForm();
+        });
+    }
+
+    /**
+     * Submit the Employment Application Form to the server via Base64.
+     */
+    function submitApplicationForm() {
+        var submitBtn = document.getElementById("upload-submit-btn");
+        if (submitBtn) submitBtn.disabled = true;
+
+        // Show loading overlay
+        var overlay = document.getElementById("overlay");
+        if (overlay) {
+            overlay.style.display = "flex";
+            document.getElementById("overlay-icon").textContent = "📤";
+            document.getElementById("overlay-title").textContent = "Uploading…";
+            document.getElementById("overlay-msg").textContent = "Sending application document to HR, please wait…";
+        }
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            var base64Data = e.target.result.split(',')[1];
+            var payload = {
+                fileName: selectedFile.name,
+                mimeType: selectedFile.type || "application/octet-stream",
+                base64Data: base64Data,
+                candidateId: appState.candidateId,
+                IS_SUPERVISORY: IS_SUPERVISORY
+            };
+
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    if (response && response.success) {
+                        // Mark submitted in local state
+                        if (appState[CURRENT_SET]) {
+                            appState[CURRENT_SET].submitted = true;
+                        }
+                        persistState();
+                        renderLastPage();
+                    } else {
+                        onUploadError(response ? response.error : "Server upload error.");
+                    }
+                })
+                .withFailureHandler(function (err) {
+                    onUploadError(err.toString());
+                })
+                .uploadEmploymentApplication(payload);
+        };
+        reader.readAsDataURL(selectedFile);
+    }
+
+    function onUploadError(errMsg) {
+        var submitBtn = document.getElementById("upload-submit-btn");
+        if (submitBtn) submitBtn.disabled = false;
+
+        var overlay = document.getElementById("overlay");
+        if (overlay) {
+            document.getElementById("overlay-icon").textContent = "⚠️";
+            document.getElementById("overlay-title").textContent = "Upload Failed";
+            document.getElementById("overlay-msg").innerHTML =
+                'There was an error uploading your application file:<br>' +
+                '<small style="color:#c62828;">' + escHtml(errMsg) + '</small><br><br>' +
+                '<button type="button" class="redirect-btn" onclick="document.getElementById(\'overlay\').style.display=\'none\'" style="border:none; cursor:pointer;">Close & Retry</button>';
+        }
+    }
+
+    /**
+     * Render the final bilingual congratulations screen.
+     */
+    function renderLastPage() {
+        // Hide upload layout and spinner
+        var df = document.getElementById("dynamic-form");
+        if (df) df.style.display = "none";
+        var uploadDiv = document.getElementById("custom-upload-container");
+        if (uploadDiv) uploadDiv.style.display = "none";
+        var overlay = document.getElementById("overlay");
+        if (overlay) overlay.style.display = "none";
+
+        // Hide progress bar & navigation bar since quiz is complete
+        var navBar = document.getElementById("test-nav-bar");
+        if (navBar) navBar.style.display = "none";
+        var pb = document.getElementById("progress-bar-wrap");
+        if (pb) pb.style.display = "none";
+
+        var congratsDiv = document.getElementById("custom-congrats-container");
+        if (!congratsDiv) {
+            congratsDiv = document.createElement("div");
+            congratsDiv.id = "custom-congrats-container";
+            var wrapper = document.getElementById("quiz-wrapper");
+            if (wrapper) wrapper.appendChild(congratsDiv);
+        }
+        congratsDiv.style.display = "block";
+
+        congratsDiv.innerHTML =
+            '<div class="quiz-card main-header-card" style="border-top: 8px solid #10b981 !important;">' +
+            '  <div class="main-title" style="color: #059669;">🎉 Assessment Completed! / Pagsusuri ay Kumpleto!</div>' +
+            '  <div class="main-description">You have successfully completed the pre-employment steps.</div>' +
+            '</div>' +
+            '' +
+            '<div class="lang-tab-bar">' +
+            '  <div class="lang-tab active" data-lang-congrats="en">English</div>' +
+            '  <div class="lang-tab" data-lang-congrats="tl">Tagalog</div>' +
+            '</div>' +
+            '' +
+            '<div class="lang-content-congrats" id="congrats-en">' +
+            '  <div class="quiz-card">' +
+            '    <div class="question-title">Next Steps</div>' +
+            '    <p class="instruction-text" style="font-size: 15px;">Congratulations! You have completed all components of the pre-employment assessment.</p>' +
+            '    <p class="instruction-text" style="font-weight: 600; color: #b45309; margin-top: 15px;">⚠️ ACTION REQUIRED:</p>' +
+            '    <p class="instruction-text">1. Copy your unique <strong>Candidate ID</strong> shown below.</p>' +
+            '    <p class="instruction-text">2. Send or email this ID to HR to verify your submission.</p>' +
+            '    <p class="instruction-text">3. Please wait for HR to contact you regarding the next steps of your application.</p>' +
+            '  </div>' +
+            '</div>' +
+            '' +
+            '<div class="lang-content-congrats" id="congrats-tl" style="display: none;">' +
+            '  <div class="quiz-card">' +
+            '    <div class="question-title">Mga Susunod na Hakbang</div>' +
+            '    <p class="instruction-text" style="font-size: 15px;">Pagbati! Matagumpay mong nakumpleto ang lahat ng bahagi ng pre-employment assessment.</p>' +
+            '    <p class="instruction-text" style="font-weight: 600; color: #b45309; margin-top: 15px;">⚠️ KAILANGANG GAWIN:</p>' +
+            '    <p class="instruction-text">1. Kopyahin ang iyong natatanging <strong>Candidate ID</strong> na makikita sa ibaba.</p>' +
+            '    <p class="instruction-text">2. Ipadala o i-email ang ID na ito sa HR upang ma-verify ang iyong pagsusumite.</p>' +
+            '    <p class="instruction-text">3. Mangyaring maghintay para sa tugon ng HR tungkol sa susunod na hakbang ng iyong aplikasyon.</p>' +
+            '  </div>' +
+            '</div>' +
+            '' +
+            '<div class="quiz-card">' +
+            '  <div class="question-title">Your Candidate ID / Iyong Candidate ID</div>' +
+            '  <div class="candidate-id-box">' +
+            '    <span class="candidate-id-text" id="candidate-id-display">' + appState.candidateId + '</span>' +
+            '    <button type="button" class="copy-btn" id="copy-id-btn">Copy / Kopyahin</button>' +
+            '  </div>' +
+            '</div>';
+
+        // Set up congratulations tab toggles
+        var congratsTabs = congratsDiv.querySelectorAll(".lang-tab");
+        congratsTabs.forEach(function (tab) {
+            tab.addEventListener("click", function () {
+                congratsTabs.forEach(function (t) { t.classList.remove("active"); });
+                tab.classList.add("active");
+                var lang = tab.getAttribute("data-lang-congrats");
+                if (lang === "en") {
+                    document.getElementById("congrats-en").style.display = "block";
+                    document.getElementById("congrats-tl").style.display = "none";
+                } else {
+                    document.getElementById("congrats-en").style.display = "none";
+                    document.getElementById("congrats-tl").style.display = "block";
+                }
+            });
+        });
+
+        // Copy to clipboard listener
+        var copyBtn = document.getElementById("copy-id-btn");
+        if (copyBtn) {
+            copyBtn.addEventListener("click", function () {
+                var idDisplay = document.getElementById("candidate-id-display");
+                if (idDisplay) {
+                    var idText = idDisplay.textContent;
+                    navigator.clipboard.writeText(idText).then(function () {
+                        copyBtn.textContent = "Copied! / Nakopya!";
+                        copyBtn.classList.add("copied");
+                        setTimeout(function () {
+                            copyBtn.textContent = "Copy / Kopyahin";
+                            copyBtn.classList.remove("copied");
+                        }, 3000);
+                    }).catch(function (err) {
+                        console.error("Clipboard copy failed: ", err);
+                    });
+                }
+            });
+        }
+
+        // Clean up local storage since exam is completed
+        clearStorage();
+    }
+</script>

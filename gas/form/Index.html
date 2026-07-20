@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <base target="_top">
+  <?!= HtmlService.createHtmlOutputFromFile('Styles').getContent(); ?>
+</head>
+
+<body>
+
+  <!-- ── Fixed Top Bar: Timer ──────────────────────────── -->
+  <div id="timer-bar">
+    Time Remaining: <span id="clock">--:--</span>
+  </div>
+
+  <!-- ── Progress bar (thin strip under timer) ─────────── -->
+  <div id="progress-bar-wrap">
+    <div id="progress-bar-fill"></div>
+  </div>
+
+  <!-- ── Navigation Tabs ───────────────────────────────── -->
+  <div id="test-nav-bar"></div>
+
+  <!-- ── Main Quiz Wrapper ─────────────────────────────── -->
+  <div class="container" id="quiz-wrapper">
+
+    <!-- Loading spinner -->
+    <div id="loading-state">
+      <div class="spinner"></div>
+      Compiling exam components, please wait…
+    </div>
+
+    <!-- Actual form (hidden until questions are loaded) -->
+    <form id="dynamic-form" style="display:none;" onsubmit="handleManualSubmit(event)">
+
+      <!-- Form title + description -->
+      <div class="quiz-card main-header-card">
+        <div class="main-title" id="form-main-title">Loading Assessment…</div>
+        <div class="main-description" id="form-main-desc"></div>
+      </div>
+
+      <!-- Email field (shown only when the source form requires it) -->
+      <div class="quiz-card" id="email-field-card" style="display:none;">
+        <div class="question-title">
+          Email Address <span class="required-asterisk">*</span>
+        </div>
+        <input type="email" id="responderEmail" placeholder="you@example.com" autocomplete="email">
+        <div class="field-error" id="error_email">A valid email address is required.</div>
+      </div>
+
+      <!-- Questions injected here by renderQuestions() -->
+      <div id="dynamic-questions-container"></div>
+
+      <button type="submit" id="submit-btn">Submit &amp; Save Progress</button>
+    </form>
+
+  </div><!-- /#quiz-wrapper -->
+
+  <!-- ── Submission / Lockout Overlay ──────────────────── -->
+  <div id="overlay">
+    <div id="overlay-icon" style="font-size:56px;margin-bottom:16px;">⏳</div>
+    <h1 id="overlay-title">Processing…</h1>
+    <p id="overlay-msg">Please wait while your answers are securely transmitted.</p>
+  </div>
+
+  <script>
+    window.EXAM_CONFIG = {
+      currentSet: "<?= currentSet ?>",
+      webAppUrl: "<?= webAppUrl ?>",
+      isSupervisory: <?= isSupervisory ?>,
+      isDevMode: <?= isDevMode ?>
+    };
+  </script>
+  <?!= HtmlService.createHtmlOutputFromFile('Essay').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('Upload').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('Scripts').getContent(); ?>
+</body>
+
+</html>

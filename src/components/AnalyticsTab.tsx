@@ -248,7 +248,7 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
     if (isModal) {
       // Vertical layout for pop-up modal to prevent horizontal crowding
       return (
-        <div className="w-full max-w-sm flex flex-col items-center gap-3 p-4 bg-slate-50/50 dark:bg-slate-900/10 rounded-xl border border-slate-100 dark:border-slate-900 mx-auto">
+        <div className="w-full max-w-sm flex flex-col items-center gap-3 p-4 bg-slate-50/50 dark:bg-slate-900/10 rounded-xl mx-auto">
           {steps.map((step, idx) => {
             const Icon = step.icon;
             const prevStep = steps[idx - 1];
@@ -261,13 +261,13 @@ export default function AnalyticsTab({ finalResults }: AnalyticsTabProps) {
                 {idx > 0 && (
                   <div className="flex items-center gap-2 text-slate-350 dark:text-slate-700 py-1">
                     <span className="text-[10px] font-bold text-slate-300 dark:text-slate-800">↓</span>
-                    <div className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 text-[9px] font-bold text-slate-500 dark:text-slate-400">
+                    <div className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 text-[9px] font-bold text-slate-500 dark:text-slate-400">
                       {conversionRate}% Pass
                     </div>
                     <span className="text-[10px] font-bold text-slate-300 dark:text-slate-800">↓</span>
                   </div>
                 )}
-                <div className="flex items-center gap-4 bg-white border border-slate-200/80 rounded-xl shadow-2xs dark:bg-slate-950 dark:border-slate-850 p-4 w-full">
+                <div className="flex items-center gap-4 bg-white rounded-xl shadow-2xs dark:bg-slate-950 dark:border-slate-850 p-4 w-full">
                   <div className={`p-3 rounded-lg shrink-0 ${step.bg}`}>
                     <Icon className="h-6 w-6" />
                   </div>
