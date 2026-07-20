@@ -225,39 +225,31 @@ export default function App() {
         }
 
         try {
-          // html2canvas-pro natively parses oklch/oklab/lch/lab/color()/color-mix() —
-          // no onclone color-scrubbing hacks needed at all.
-          const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-          });
-
-          const imgData = canvas.toDataURL("image/jpeg", 0.98);
+          const pageElements = element.querySelectorAll<HTMLElement>(".pdf-page");
           const pdf = new jsPDF({ unit: "in", format: "letter", orientation: "portrait" });
 
-          const margin = 0.4;
-          const pageWidth = pdf.internal.pageSize.getWidth();
-          const pageHeight = pdf.internal.pageSize.getHeight();
-          const usableWidth = pageWidth - margin * 2;
-          const usableHeight = pageHeight - margin * 2;
-
-          const imgProps = pdf.getImageProperties(imgData);
-          const imgHeight = (imgProps.height * usableWidth) / imgProps.width;
-
-          let heightLeft = imgHeight;
-          let position = margin;
-
-          pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeight);
-          heightLeft -= usableHeight;
-
-          // Multi-page support: keep adding pages, shifting the image up each time,
-          // for content taller than one page.
-          while (heightLeft > 0) {
-            position = margin - (imgHeight - heightLeft);
-            pdf.addPage();
-            pdf.addImage(imgData, "JPEG", margin, position, usableWidth, imgHeight);
-            heightLeft -= usableHeight;
+          if (pageElements.length > 0) {
+            for (let i = 0; i < pageElements.length; i++) {
+              const pageEl = pageElements[i];
+              const canvas = await html2canvas(pageEl, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+              });
+              const imgData = canvas.toDataURL("image/jpeg", 0.98);
+              if (i > 0) {
+                pdf.addPage();
+              }
+              pdf.addImage(imgData, "JPEG", 0, 0, 8.5, 11);
+            }
+          } else {
+            const canvas = await html2canvas(element, {
+              scale: 2,
+              useCORS: true,
+              logging: false,
+            });
+            const imgData = canvas.toDataURL("image/jpeg", 0.98);
+            pdf.addImage(imgData, "JPEG", 0, 0, 8.5, 11);
           }
 
           pdf.save(
