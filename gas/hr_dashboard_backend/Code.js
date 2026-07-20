@@ -71,6 +71,8 @@ function doGet(e) {
       return handleGet(e);
     } else if (action === "analytics" || action === "analytics_summary") {
       return handleAnalytics(e);
+    } else if (action === "employment_form" || action === "get_employment_form") {
+      return handleEmploymentForm(e);
     } else {
       return respondJson({ success: false, error: "Unknown action: " + action }, 400);
     }

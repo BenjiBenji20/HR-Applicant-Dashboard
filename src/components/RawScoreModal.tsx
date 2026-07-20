@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, Cpu, BarChart3, AlertCircle, Award, Brain, FileText, Timer, Pencil, Save, Loader2 } from "lucide-react";
+import { X, Cpu, BarChart3, AlertCircle, Award, Brain, FileText, Timer, Pencil, Save, Loader2, Download } from "lucide-react";
 import { ApplicantSummary, ApplicantDetail } from "../types/types";
 
 interface RawScoreModalProps {
@@ -15,6 +15,26 @@ export default function RawScoreModal({ summary, detail, onClose, onUpdateCompan
   const [companyValue, setCompanyValue] = useState(summary?.metadata.company || "");
   const [isSavingCompany, setIsSavingCompany] = useState(false);
   const [companyError, setCompanyError] = useState("");
+  const [isDownloadingForm, setIsDownloadingForm] = useState(false);
+  const [formAlertModalOpen, setFormAlertModalOpen] = useState(false);
+
+  const handleDownloadEmploymentForm = async () => {
+    if (!summary) return;
+    setIsDownloadingForm(true);
+    try {
+      const res = await fetch(`/api/applicants?action=employment_form&id=${encodeURIComponent(summary.id)}`);
+      const json = await res.json();
+      if (json.success && json.documentUrl) {
+        window.open(json.documentUrl, "_blank");
+      } else {
+        setFormAlertModalOpen(true);
+      }
+    } catch (err) {
+      setFormAlertModalOpen(true);
+    } finally {
+      setIsDownloadingForm(false);
+    }
+  };
 
   // Keep local companyValue in sync with summary prop
   useEffect(() => {
@@ -143,15 +163,15 @@ export default function RawScoreModal({ summary, detail, onClose, onUpdateCompan
 
         {/* Modal Body */}
         <div className="mt-6 space-y-6">
-          {/* Top 2-Grid Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center bg-slate-50 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-100 dark:border-slate-800/60 text-xs">
-            {/* Grid 1: Full Name & Position (Kept together in one block) */}
+          {/* Top 3-Grid Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center bg-slate-50 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-100 dark:border-slate-800/60 text-xs">
+            {/* Grid 1: Full Name & Position */}
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-0.5">
                 Applicant & Position
               </span>
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
-                Applicant: {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor}
+              <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                {summary.metadata.fullName} &bull; {summary.intent.positionAppliedFor}
               </h2>
             </div>
 
@@ -161,7 +181,7 @@ export default function RawScoreModal({ summary, detail, onClose, onUpdateCompan
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-0.5">
                   Company
                 </span>
-                <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                <p className="text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400">
                   {companyValue || "No Company Yet"}
                 </p>
               </div>
@@ -178,6 +198,29 @@ export default function RawScoreModal({ summary, detail, onClose, onUpdateCompan
                 <Pencil className="h-3.5 w-3.5 cursor-pointer" />
                 <span>Edit</span>
               </button>
+            </div>
+
+            {/* Grid 3: Applicant Employment Form */}
+            <div className="flex items-center justify-between sm:justify-start gap-3 md:border-l border-slate-200 dark:border-slate-800 md:pl-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-0.5">
+                  Employment Form
+                </span>
+                <button
+                  id="download-employment-form-btn"
+                  onClick={handleDownloadEmploymentForm}
+                  disabled={isDownloadingForm}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-xs disabled:opacity-50"
+                  title="Download Applicant Employment Form"
+                >
+                  {isDownloadingForm ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                  <span>{isDownloadingForm ? "Checking..." : "Download Form"}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -534,6 +577,34 @@ export default function RawScoreModal({ summary, detail, onClose, onUpdateCompan
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alert Modal when Employment Form is not available */}
+      {formAlertModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-4">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                Form Unavailable
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                Applicant Form Not Submitted
+              </p>
+            </div>
+            <div className="pt-2">
+              <button
+                id="close-form-alert-btn"
+                onClick={() => setFormAlertModalOpen(false)}
+                className="w-full rounded-lg bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 py-2 text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
