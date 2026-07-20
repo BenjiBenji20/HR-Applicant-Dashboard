@@ -4,9 +4,8 @@
  */
 
 var scriptProperties = PropertiesService.getScriptProperties();
-
-// Toggle between Test (true) and Prod (false) environments
-var IS_DEVELOPMENT = true;
+var envProp = scriptProperties.getProperty('IS_DEVELOPMENT');
+var IS_DEVELOPMENT = envProp ? String(envProp).trim().toLowerCase() === 'true' : false;
 var TEST_ANALYTICS_SPREADSHEET_ID = scriptProperties.getProperty('TEST_ANALYTICS_SPREADSHEET_ID');
 var PROD_ANALYTICS_SPREADSHEET_ID = scriptProperties.getProperty('PROD_ANALYTICS_SPREADSHEET_ID');
 

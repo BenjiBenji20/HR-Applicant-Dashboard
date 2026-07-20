@@ -20,7 +20,6 @@ function getAI() {
   return aiClient;
 }
 
-// Structured JSON output schema to ensure deterministic response structure
 const responseSchema = {
   type: Type.OBJECT,
   properties: {
@@ -60,9 +59,8 @@ const responseSchema = {
 };
 
 export default async function handler(req: Request, res: Response) {
-  // Allow cross-origin requests for local testing if needed
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
@@ -76,9 +74,7 @@ export default async function handler(req: Request, res: Response) {
   try {
     const action = req.query.action;
 
-    // =========================================================================
     // SECURE PROXY SAVE HANDLER
-    // =========================================================================
     if (action === "save") {
       const gasUrl = process.env.GAS_WEB_APP_URL;
       const gasSecret = process.env.GAS_SECRET || "csi-hr-portal-secure-token-2026";
@@ -87,7 +83,6 @@ export default async function handler(req: Request, res: Response) {
         return res.status(500).json({ error: "GAS_WEB_APP_URL environment variable is not configured on the server." });
       }
 
-      // Forward request securely from server-to-sheet (secret key is appended on the server)
       const targetUrl = `${gasUrl}?secret=${gasSecret}&action=save_ai_assessment`;
       
       const response = await fetch(targetUrl, {
@@ -104,9 +99,6 @@ export default async function handler(req: Request, res: Response) {
       return res.status(200).json(result);
     }
 
-    // =========================================================================
-    // GEMINI REPORT GENERATION STREAM HANDLER
-    // =========================================================================
     const { applicant, details } = req.body;
     if (!applicant) {
       return res.status(400).json({ error: "Applicant data is required" });
@@ -119,8 +111,6 @@ export default async function handler(req: Request, res: Response) {
     const supervisory = details?.supervisory || {};
 
     const ai = getAI();
-
-    // Fallback if Gemini API key is missing
     if (!ai) {
       res.setHeader("Content-Type", "application/json; charset=utf-8");
       const fallback = {
@@ -131,12 +121,10 @@ export default async function handler(req: Request, res: Response) {
         index4Assessment: supervisoryTest ? `Possesses capabilities in human relations practices graded as ${supervisory.humanRelationsPractices}.` : "",
         aiGenPersonalityAssessment: `Personality evaluation shows emotional stability is ${pf16.emotionalStability || "Average"} and conscientiousness is ${pf16.conscientiousness || "Average"}. The candidate displays an overall balanced profile suitable for the ${position} role.`
       };
-      
       await new Promise(resolve => setTimeout(resolve, 800));
       return res.status(200).json(fallback);
     }
 
-    // Augmentation Prompt (excluding Candidate personal info)
     const prompt = `
 Generate a professional psychometric evaluation summary.
 Position applied for: ${position}
@@ -181,7 +169,7 @@ Output constraints:
 `;
 
     const responseStream = await ai.models.generateContentStream({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.5-flash",
       contents: prompt,
       config: {
         systemInstruction: "You are an expert Industrial-Organizational Psychologist conducting professional candidate evaluations. Output must match the requested JSON schema exactly.",
@@ -198,10 +186,9 @@ Output constraints:
         res.write(chunk.text);
       }
     }
-    
     res.end();
   } catch (error: any) {
-    console.error("Vercel Serverless function error:", error);
+    console.error("Gemini API error:", error);
     if (!res.headersSent) {
       res.status(500).json({ error: error.message || "Failed to generate psychometric evaluation stream" });
     }

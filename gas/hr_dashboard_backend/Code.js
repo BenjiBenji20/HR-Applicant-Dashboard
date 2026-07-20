@@ -10,12 +10,9 @@
 // CONFIGURATION
 // =========================================================================
 
-// Toggle between Test (true) and Prod (false) environments
-var IS_DEVELOPMENT = true;
-
-// Authentication secret key. If present in Script Properties under SPREADSHEET_SECRET,
-// it will override this default value. Keep this secure.
 var scriptProperties = PropertiesService.getScriptProperties();
+var envProp = scriptProperties.getProperty('IS_DEVELOPMENT');
+var IS_DEVELOPMENT = envProp ? String(envProp).trim().toLowerCase() === 'true' : false;
 
 var SECRET_KEY = scriptProperties.getProperty('SECRET_KEY');
 
