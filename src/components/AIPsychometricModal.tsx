@@ -482,6 +482,18 @@ export default function AIPsychometricModal({
                     className="w-full h-16 rounded-lg border border-slate-100 p-2.5 text-xs text-slate-655 dark:text-slate-400 bg-slate-50/30 dark:bg-slate-900/20 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none resize-none font-medium italic leading-relaxed"
                   />
                 </div>
+
+                {/* Overall Evaluation Assessment (Separate Alone Grid) */}
+                {details.overAllAssessment && (
+                  <div className="col-span-1 md:col-span-2 rounded-xl bg-white dark:bg-slate-950/40 p-4 space-y-2 border border-emerald-100/60 dark:border-emerald-900/30">
+                    <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider block">
+                      Overall Evaluation Assessment
+                    </span>
+                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
+                      {details.overAllAssessment}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

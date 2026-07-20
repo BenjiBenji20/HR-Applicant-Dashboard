@@ -394,19 +394,19 @@ export default function RawScoreModal({ summary, detail, onClose, onUpdateCompan
                     <span>{detail.supervisory.humanRelationsPractices}</span>
                   </div>
                 </div>
-              </div>
 
-              {/* overallAssessment short text callout */}
-              {detail.overAllAssessment && (
-                <div className="p-3.5 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl">
-                  <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider block mb-1">
-                    Overall Evaluation Assessment
-                  </span>
-                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
-                    {detail.overAllAssessment}
-                  </p>
-                </div>
-              )}
+                {/* Overall Evaluation Assessment (Separate Alone Grid) */}
+                {detail.overAllAssessment && (
+                  <div className="col-span-1 md:col-span-2 rounded-xl bg-white/70 dark:bg-slate-950/40 p-4 space-y-2 border border-emerald-100/60 dark:border-emerald-900/30">
+                    <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider block">
+                      Overall Evaluation Assessment
+                    </span>
+                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
+                      {detail.overAllAssessment}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
