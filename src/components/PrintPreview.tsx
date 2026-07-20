@@ -47,7 +47,7 @@ export default function PrintPreview({ applicant, details }: PrintPreviewProps) 
       <table className="w-full border-collapse border border-slate-400 text-[10px] bg-white/85">
         <thead>
           <tr className="bg-sky-50 border-b border-slate-400">
-            <th className="py-0.5 px-1.5 text-left font-bold text-slate-800 border-r border-slate-400 w-1/2">
+            <th className="py-0.5 px-1.5 text-left font-bold text-slate-800 border-r border-b border-slate-400 w-1/2">
               Parameter
             </th>
             {RATINGS.map((r, i) => {
@@ -55,7 +55,7 @@ export default function PrintPreview({ applicant, details }: PrintPreviewProps) 
               return (
                 <th
                   key={r}
-                  className={`py-0.5 px-1 text-center font-bold border-r border-slate-400 ${
+                  className={`py-0.5 px-1 text-center font-bold border-r border-b border-slate-400 ${
                     i === RATINGS.length - 1 ? "border-r-0" : ""
                   } ${lightGreen ? "bg-emerald-100/70 text-emerald-950 font-extrabold" : "text-slate-800"} w-[7%]`}
                 >
@@ -69,8 +69,8 @@ export default function PrintPreview({ applicant, details }: PrintPreviewProps) 
           {rows.map((row, idx) => {
             const abbr = getAbbr(row.rating);
             return (
-              <tr key={idx} className="border-b border-slate-300">
-                <td className="py-0.5 px-1.5 font-medium text-slate-800 border-r border-slate-400">
+              <tr key={idx} className="border-b border-slate-400">
+                <td className="py-0.5 px-1.5 font-medium text-slate-800 border-r border-b border-slate-400">
                   {row.label}
                 </td>
                 {RATINGS.map((r, i) => {
@@ -79,7 +79,7 @@ export default function PrintPreview({ applicant, details }: PrintPreviewProps) 
                   return (
                     <td
                       key={r}
-                      className={`py-0.5 px-1 text-center border-r border-slate-400 ${
+                      className={`py-0.5 px-1 text-center border-r border-b border-slate-400 ${
                         i === RATINGS.length - 1 ? "border-r-0" : ""
                       } ${lightGreen ? "bg-emerald-50/90" : ""} ${
                         isMatched ? "text-slate-950 font-black text-xs" : "text-transparent"
@@ -101,29 +101,29 @@ export default function PrintPreview({ applicant, details }: PrintPreviewProps) 
     if (!testTimes) return null;
     const rows = Object.entries(testTimes);
     return (
-      <div className="mb-2">
-        <h5 className="text-[9.5px] font-bold text-slate-700 uppercase tracking-wider mb-0.5">
+      <div className="mb-2.5">
+        <h5 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
           {title}
         </h5>
-        <div className="overflow-hidden border border-slate-400 bg-white/85 text-[9.5px]">
+        <div className="overflow-hidden border border-slate-400 bg-white/90 text-xs">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-sky-50 text-slate-800 font-bold uppercase border-b border-slate-400">
-                <th className="py-0.5 px-1.5 text-left border-r border-slate-400">Test No.</th>
-                <th className="py-0.5 px-1.5 text-left border-r border-slate-400">Consumed Time</th>
-                <th className="py-0.5 px-1.5 text-right border-r border-slate-400">Time Limit</th>
-                <th className="py-0.5 px-1.5 text-center border-r border-slate-400">Test Answered</th>
-                <th className="py-0.5 px-1.5 text-center">Item</th>
+                <th className="py-1 px-2 text-left border-r border-slate-400">Test No.</th>
+                <th className="py-1 px-2 text-left border-r border-slate-400">Consumed Time</th>
+                <th className="py-1 px-2 text-right border-r border-slate-400">Time Limit</th>
+                <th className="py-1 px-2 text-center border-r border-slate-400">Test Answered</th>
+                <th className="py-1 px-2 text-center">Item</th>
               </tr>
             </thead>
-            <tbody className="text-slate-800 font-medium divide-y divide-slate-300">
+            <tbody className="text-slate-900 font-medium divide-y divide-slate-300">
               {rows.map(([key, val]: [string, any]) => (
                 <tr key={key} className="border-b border-slate-300">
-                  <td className="py-0.5 px-1.5 capitalize border-r border-slate-400">{key.replace("test", "Test ")}</td>
-                  <td className="py-0.5 px-1.5 font-mono font-semibold border-r border-slate-400">{val.consumedTime}</td>
-                  <td className="py-0.5 px-1.5 text-right font-mono border-r border-slate-400">{val.timeFrame}</td>
-                  <td className="py-0.5 px-1.5 text-center font-mono border-r border-slate-400">{val.testAnswered ?? "-"}</td>
-                  <td className="py-0.5 px-1.5 text-center font-mono">{val.testItem}</td>
+                  <td className="py-1 px-2 capitalize border-r border-slate-400">{key.replace("test", "Test ")}</td>
+                  <td className="py-1 px-2 font-mono font-semibold border-r border-slate-400">{val.consumedTime}</td>
+                  <td className="py-1 px-2 text-right font-mono border-r border-slate-400">{val.timeFrame}</td>
+                  <td className="py-1 px-2 text-center font-mono border-r border-slate-400">{val.testAnswered ?? "-"}</td>
+                  <td className="py-1 px-2 text-center font-mono">{val.testItem}</td>
                 </tr>
               ))}
             </tbody>
@@ -208,19 +208,19 @@ export default function PrintPreview({ applicant, details }: PrintPreviewProps) 
             breakAfter: "page",
           }}
         >
-          {/* Centered Background Image per page with opacity 70% */}
+          {/* Centered Background Image per page with opacity 90% */}
           <img
             src="/test_result_bg.jpg"
             alt=""
-            className="absolute inset-0 w-full h-full object-cover object-center z-0 pointer-events-none opacity-70"
+            className="absolute inset-0 w-full h-full object-cover object-center z-0 pointer-events-none opacity-90"
             crossOrigin="anonymous"
           />
 
           <div className="relative z-10 px-8 py-10 flex flex-col justify-center h-full">
             <div>
               <div className="bg-white/85 p-4 rounded-xs">
-                {/* Personal Info Block */}
-                <div className="grid grid-cols-2 gap-4 border border-slate-300 bg-white/90 p-3 mb-3 text-xs">
+                {/* Personal Info Block (No Outer Border) */}
+                <div className="grid grid-cols-2 gap-4 bg-white/90 p-3 mb-3 text-xs">
                   <div className="space-y-1">
                     <p><span className="font-bold text-slate-800">Name:</span> {applicant.metadata.fullName}</p>
                     <p><span className="font-bold text-slate-800">Age:</span> {applicant.metadata.age}</p>
@@ -264,11 +264,11 @@ export default function PrintPreview({ applicant, details }: PrintPreviewProps) 
             breakAfter: isSupervisory ? "page" : "auto",
           }}
         >
-          {/* Centered Background Image per page with opacity 70% */}
+          {/* Centered Background Image per page with opacity 90% */}
           <img
             src="/test_result_bg.jpg"
             alt=""
-            className="absolute inset-0 w-full h-full object-cover object-center z-0 pointer-events-none opacity-70"
+            className="absolute inset-0 w-full h-full object-cover object-center z-0 pointer-events-none opacity-90"
             crossOrigin="anonymous"
           />
 
@@ -374,11 +374,11 @@ export default function PrintPreview({ applicant, details }: PrintPreviewProps) 
               height: "1056px",
             }}
           >
-            {/* Centered Background Image per page with opacity 70% */}
+            {/* Centered Background Image per page with opacity 90% */}
             <img
               src="/test_result_bg.jpg"
               alt=""
-              className="absolute inset-0 w-full h-full object-cover object-center z-0 pointer-events-none opacity-70"
+              className="absolute inset-0 w-full h-full object-cover object-center z-0 pointer-events-none opacity-90"
               crossOrigin="anonymous"
             />
 
