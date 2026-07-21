@@ -50,6 +50,9 @@
 
     // SUPERVISORY form
     "SUPERVISORY_1": 30 * 60,
+
+    // ESSAY form
+    "ESSAY": 5 * 60,
   };
 
   if (IS_DEV_MODE) {
@@ -64,6 +67,7 @@
       "FIT_PLANNING&16PF_3": 1 * 60,
       "FIT_PLANNING&16PF_4": 1 * 60,
       "SUPERVISORY_1": 1 * 60,
+      "ESSAY": 1 * 60,
     };
   }
 
@@ -87,7 +91,7 @@
   const BASE_WEBAPP_URL = window.EXAM_CONFIG.webAppUrl;
 
   // Bump the key whenever the state schema changes (forces clean slate)
-  const STORAGE_KEY = "exam_state_v6";
+  const STORAGE_KEY = "exam_state_v7";
 
   function generateUUID() {
     try {
@@ -155,8 +159,9 @@
 
   function repairSetState(s, key, isFirst) {
     var formKey = getFormKeyForSetKey(key);
-    if (typeof s.remaining !== "number" || !isFinite(s.remaining) || s.remaining < 0)
-      s.remaining = TEST_LIMITS[formKey] != null ? TEST_LIMITS[formKey] : 999999;
+    var maxLimit = TEST_LIMITS[formKey] != null ? TEST_LIMITS[formKey] : 999999;
+    if (typeof s.remaining !== "number" || !isFinite(s.remaining) || s.remaining < 0 || s.remaining > maxLimit)
+      s.remaining = maxLimit;
     if (typeof s.elapsed !== "number" || !isFinite(s.elapsed) || s.elapsed < 0)
       s.elapsed = 0;
     if (typeof s.unlocked !== "boolean")
@@ -294,7 +299,7 @@
       showLockout("⏰ Time Expired", getRedirectMarkup(CURRENT_SET));
       return;
     }
-    if (cs.submitted && (cs.remaining <= 0 || formKey === "ESSAY")) {
+    if (cs.submitted && (cs.remaining <= 0 || formKey === "APPLICATION_UPLOAD")) {
       showLockout("✅ Already Submitted", getRedirectMarkup(CURRENT_SET));
       return;
     }
@@ -367,7 +372,7 @@
         displayTitle = "Application Form";
       }
 
-      if (s.submitted && (s.remaining <= 0 || formKey === "ESSAY" || formKey === "APPLICATION_UPLOAD")) {
+      if (s.submitted && (s.remaining <= 0 || formKey === "APPLICATION_UPLOAD")) {
         tab.className = "nav-tab locked";
         tab.textContent = displayTitle + " ✓";
       } else if (!s.unlocked) {
@@ -379,7 +384,7 @@
       } else {
         tab.className = "nav-tab" + (isActive ? " active" : "");
         var checkMark = s.submitted ? " ✓" : "";
-        if (formKey === "ESSAY" || formKey === "APPLICATION_UPLOAD") {
+        if (formKey === "APPLICATION_UPLOAD") {
           tab.textContent = displayTitle + checkMark;
         } else {
           var m = Math.floor(s.remaining / 60);
@@ -422,15 +427,21 @@
   // ============================================================
   function initializeQuiz(formPackage) {
     try {
+      globalQuestions = formPackage ? (formPackage.questions || []) : [];
+
       var formKey = getFormKeyForSetKey(CURRENT_SET);
       if (formKey === "APPLICATION_UPLOAD") {
         document.getElementById("loading-state").style.display = "none";
         renderApplicationUploadPage();
         return;
       }
+
+      document.getElementById("loading-state").style.display = "none";
+      document.getElementById("dynamic-form").style.display = "block";
+
       if (formKey === "ESSAY") {
-        document.getElementById("loading-state").style.display = "none";
         renderEssayPage(formPackage);
+        startClock();
         return;
       }
 
@@ -443,11 +454,6 @@
       } else {
         document.getElementById("email-field-card").style.display = "none";
       }
-
-      globalQuestions = formPackage.questions || [];
-
-      document.getElementById("loading-state").style.display = "none";
-      document.getElementById("dynamic-form").style.display = "block";
 
       renderQuestions();
       repopulateSavedAnswers();
@@ -840,7 +846,7 @@
   function startClock() {
     var formKey = getFormKeyForSetKey(CURRENT_SET);
     var timerBar = document.getElementById("timer-bar");
-    if (formKey === "ESSAY" || formKey === "APPLICATION_UPLOAD") {
+    if (formKey === "APPLICATION_UPLOAD") {
       if (timerBar) timerBar.style.display = "none";
       return;
     } else {
